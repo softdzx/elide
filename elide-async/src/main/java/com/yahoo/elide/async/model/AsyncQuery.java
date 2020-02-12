@@ -13,8 +13,8 @@ import com.yahoo.elide.annotation.UpdatePermission;
 
 @Entity
 @Include(type = "query", rootLevel = true)
-@ReadPermission(expression = "Principal is Owner")
-@UpdatePermission(expression = "None")
+//@ReadPermission(expression = "Principal is Owner")
+//@UpdatePermission(expression = "None")
 public class AsyncQuery implements PrincipalOwned {
     @Id
     UUID id; //Can be generated or provided.
@@ -25,7 +25,7 @@ public class AsyncQuery implements PrincipalOwned {
     String query;  //JSON-API PATH or GraphQL payload.
     QueryType queryType; //GRAPHQL, JSONAPI
 
-    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
+//    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
     QueryStatus status;
 
     @OneToOne

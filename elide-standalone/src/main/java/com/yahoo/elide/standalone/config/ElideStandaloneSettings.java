@@ -63,7 +63,7 @@ public interface ElideStandaloneSettings {
      * @return Configured ElideSettings object.
      */
     default ElideSettings getElideSettings(ServiceLocator injector) {
-        EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageName(),
+        EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageNames(),
                 getDatabaseProperties());
         DataStore dataStore = new JpaDataStore(
                 () -> { return entityManagerFactory.createEntityManager(); },
@@ -128,8 +128,8 @@ public interface ElideStandaloneSettings {
      *
      * @return Default: com.yourcompany.elide.models
      */
-    default String getModelPackageName() {
-        return "com.yourcompany.elide.models";
+    default String[] getModelPackageNames() {
+        return new String[] {"com.yourcompany.elide.models", "com.yahoo.elide.async.model"};
     }
 
     /**

@@ -16,9 +16,9 @@ import com.yahoo.elide.annotation.UpdatePermission;
 
 @Entity
 @Include(type="queryResult")
-@ReadPermission(expression = "Principal is Owner")
-@UpdatePermission(expression = "None")
-@CreatePermission(expression = "None")
+//@ReadPermission(expression = "Principal is Owner")
+//@UpdatePermission(expression = "None")
+//@CreatePermission(expression = "None")
 public class AsyncQueryResult implements PrincipalOwned {
     @Id
     UUID id; //Matches UUID in query.
@@ -27,7 +27,7 @@ public class AsyncQueryResult implements PrincipalOwned {
 
     String responseBody; //success or errors
 
-    HttpStatus status; // HTTP Status
+    Integer status; // HTTP Status
 
     Date createdOn;
     Date updatedOn;

@@ -9,6 +9,7 @@ import com.yahoo.elide.utils.ClassScanner;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -23,7 +24,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
  */
 public class Util {
 
-    public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, Properties options) {
+    public static EntityManagerFactory getEntityManagerFactory(String[] modelPackageNames, Properties options) {
 
         // Configure default options for example service
         if (options.isEmpty()) {
@@ -52,7 +53,7 @@ public class Util {
         }
 
         PersistenceUnitInfo persistenceUnitInfo = new PersistenceUnitInfoImpl("elide-stand-alone",
-                getAllEntities(modelPackageName), options);
+                getAllEntities(modelPackageNames), options);
 
         return new EntityManagerFactoryBuilderImpl(
                 new PersistenceUnitInfoDescriptor(persistenceUnitInfo), new HashMap<>())
@@ -62,12 +63,16 @@ public class Util {
     /**
      * Get all the entities in a package.
      *
-     * @param packageName Package name
+     * @param packageNames List of Package names
      * @return All entities found in package.
      */
-    public static List<String> getAllEntities(String packageName) {
-        return ClassScanner.getAnnotatedClasses(packageName, Entity.class).stream()
+    public static List<String> getAllEntities(String[] packageNames) {
+    	List<String> entities = new ArrayList<String>();
+    	for (int i = 0; i <packageNames.length; i++) {
+    		entities.addAll(ClassScanner.getAnnotatedClasses(packageNames[i], Entity.class).stream()
                 .map(Class::getName)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+    	}
+    	return entities;
     }
 }
