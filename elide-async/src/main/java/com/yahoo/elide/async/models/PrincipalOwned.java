@@ -1,4 +1,4 @@
-package com.yahoo.elide.async.model;
+package com.yahoo.elide.async.models;
 
 interface PrincipalOwned {
     public String getPrincipalName();

@@ -9,7 +9,6 @@ import com.yahoo.elide.utils.ClassScanner;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -24,7 +23,8 @@ import javax.persistence.spi.PersistenceUnitInfo;
  */
 public class Util {
 
-    public static EntityManagerFactory getEntityManagerFactory(String[] modelPackageNames, Properties options) {
+    public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, String asyncModelPackageName, 
+            Properties options) {
 
         // Configure default options for example service
         if (options.isEmpty()) {
@@ -51,9 +51,9 @@ public class Util {
             options.put("javax.persistence.jdbc.user", "elide");
             options.put("javax.persistence.jdbc.password", "elide123");
         }
-
+        
         PersistenceUnitInfo persistenceUnitInfo = new PersistenceUnitInfoImpl("elide-stand-alone",
-                getAllEntities(modelPackageNames), options);
+        		combineModelEntities(modelPackageName, asyncModelPackageName), options);
 
         return new EntityManagerFactoryBuilderImpl(
                 new PersistenceUnitInfoDescriptor(persistenceUnitInfo), new HashMap<>())
@@ -61,18 +61,30 @@ public class Util {
     }
 
     /**
+     * Combine the model entities with Async model.
+     *
+     * @param modelPackageName Package name
+     * @param asyncModelPackageName Async model package Name
+     * @return All entities combined from both package.
+     */
+    public static List<String> combineModelEntities(String modelPackageName, String asyncModelPackageName) {
+
+    	List<String> modelEntities = getAllEntities(modelPackageName);
+    	modelEntities.addAll(getAllEntities(asyncModelPackageName));
+    	
+        return modelEntities;
+    }
+    
+    /**
      * Get all the entities in a package.
      *
-     * @param packageNames List of Package names
+     * @param packageName Package name
      * @return All entities found in package.
      */
-    public static List<String> getAllEntities(String[] packageNames) {
-    	List<String> entities = new ArrayList<String>();
-    	for (int i = 0; i <packageNames.length; i++) {
-    		entities.addAll(ClassScanner.getAnnotatedClasses(packageNames[i], Entity.class).stream()
+    public static List<String> getAllEntities(String packageName) {
+
+        return ClassScanner.getAnnotatedClasses(packageName, Entity.class).stream()
                 .map(Class::getName)
-                .collect(Collectors.toList()));
-    	}
-    	return entities;
+                .collect(Collectors.toList());
     }
 }

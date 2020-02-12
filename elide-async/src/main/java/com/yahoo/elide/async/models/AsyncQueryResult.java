@@ -1,4 +1,4 @@
-package com.yahoo.elide.async.model;
+package com.yahoo.elide.async.models;
 
 import java.util.Date;
 import java.util.UUID;

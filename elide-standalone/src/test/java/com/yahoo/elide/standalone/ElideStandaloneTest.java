@@ -64,8 +64,8 @@ public class ElideStandaloneTest {
             }
 
             @Override
-            public String[] getModelPackageNames() {
-                return new String[] {Post.class.getPackage().getName(), "com.yahoo.elide.async.model"};
+            public String getModelPackageName() {
+                return Post.class.getPackage().getName();
             }
 
             @Override

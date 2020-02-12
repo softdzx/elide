@@ -9,6 +9,7 @@ import com.yahoo.elide.ElideSettings;
 import com.yahoo.elide.ElideSettingsBuilder;
 
 import com.yahoo.elide.Injector;
+import com.yahoo.elide.async.models.AsyncQuery;
 import com.yahoo.elide.audit.AuditLogger;
 import com.yahoo.elide.audit.Slf4jLogger;
 import com.yahoo.elide.core.DataStore;
@@ -63,8 +64,8 @@ public interface ElideStandaloneSettings {
      * @return Configured ElideSettings object.
      */
     default ElideSettings getElideSettings(ServiceLocator injector) {
-        EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageNames(),
-                getDatabaseProperties());
+        EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageName(),
+        		getAsyncModelPackageName(), getDatabaseProperties());
         DataStore dataStore = new JpaDataStore(
                 () -> { return entityManagerFactory.createEntityManager(); },
                 (em -> { return new NonJtaTransaction(em); }));
@@ -128,8 +129,23 @@ public interface ElideStandaloneSettings {
      *
      * @return Default: com.yourcompany.elide.models
      */
-    default String[] getModelPackageNames() {
-        return new String[] {"com.yourcompany.elide.models", "com.yahoo.elide.async.model"};
+    default String getModelPackageName() {
+        return "com.yourcompany.elide.models";
+    }
+    
+    /**
+     * Package name containing the Async models to support the Async query feature. This package will be 
+     * recursively scanned for @Entity's and registered with Elide.
+     *
+     * NOTE: This will scan for all entities in that package and bind this data to a set named "elideAllModels".
+     *       If providing a custom ElideSettings object, you can inject this data into your class by using:
+     *
+     *       <strong>@Inject @Named("elideAllModels") Set&lt;Class&gt; entities;</strong>
+     *
+     * @return
+     */
+    default String getAsyncModelPackageName() {
+        return AsyncQuery.class.getPackage().getName();
     }
 
     /**
@@ -177,6 +193,15 @@ public interface ElideStandaloneSettings {
      * @return Default: True
      */
     default boolean enableGraphQL() {
+        return true;
+    }
+
+    /**
+     * Enable the support for Async querying feature. If false, the async feature will be disabled.
+     *
+     * @return Default: True
+     */
+    default boolean enableAsync() {
         return true;
     }
 
