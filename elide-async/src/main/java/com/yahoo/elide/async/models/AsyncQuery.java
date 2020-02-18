@@ -11,6 +11,7 @@ import com.yahoo.elide.annotation.Include;
 import com.yahoo.elide.annotation.OnCreatePostCommit;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
+import com.yahoo.elide.async.models.security.IsOwner.AsyncQueryOwner;
 import com.yahoo.elide.async.service.AsyncExecutorService;
 import com.yahoo.elide.async.service.QueryThread;
 
@@ -18,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Entity
 @Include(type = "query", rootLevel = true)
-//@ReadPermission(expression = "Principal is Owner")
-//@UpdatePermission(expression = "None")
+@ReadPermission(expression = AsyncQueryOwner.PRINCIPAL_IS_OWNER)
+@UpdatePermission(expression = "Prefab.Role.None")
 @Slf4j
 public class AsyncQuery implements PrincipalOwned {
     @Id
@@ -51,5 +52,4 @@ public class AsyncQuery implements PrincipalOwned {
         log.info("AsyncExecutorService executor starting to execute query");
         AsyncExecutorService.executeQuery(query, queryType);
     }
-
 }
