@@ -3,16 +3,17 @@ package com.yahoo.elide.async.models;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import com.yahoo.elide.annotation.Include;
 import com.yahoo.elide.annotation.OnCreatePostCommit;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
 import com.yahoo.elide.async.service.AsyncExecutorService;
-import com.yahoo.elide.async.service.QueryThread;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,10 +47,14 @@ public class AsyncQuery implements PrincipalOwned {
 		return principalName;
 	}
 
+    @Inject
+    @Transient
+    AsyncExecutorService asyncExecutorService;
+
     @OnCreatePostCommit
     public void executeQueryFromExecutor() {
-        log.info("AsyncExecutorService executor starting to execute query");
-        AsyncExecutorService.executeQuery(query, queryType);
+        log.info("AsyncExecutorService executor object: {}", asyncExecutorService);
+        asyncExecutorService.executeQuery(query, queryType);
     }
 
 }

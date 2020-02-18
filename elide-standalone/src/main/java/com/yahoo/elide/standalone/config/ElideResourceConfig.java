@@ -7,6 +7,7 @@ package com.yahoo.elide.standalone.config;
 
 import com.yahoo.elide.Elide;
 import com.yahoo.elide.ElideSettings;
+import com.yahoo.elide.async.service.AsyncExecutorService;
 import com.yahoo.elide.core.DataStore;
 import com.yahoo.elide.core.EntityDictionary;
 import com.yahoo.elide.resources.DefaultOpaqueUserFunction;
@@ -74,6 +75,7 @@ public class ElideResourceConfig extends ResourceConfig {
                 // Bind elide instance for injection into endpoint
                 bind(elide).to(Elide.class).named("elide");
 
+
                 // Bind user extraction function for endpoint
                 bind(settings.getUserExtractionFunction())
                         .to(DefaultOpaqueUserFunction.class).named("elideUserExtractionFunction");
@@ -82,6 +84,11 @@ public class ElideResourceConfig extends ResourceConfig {
                 bind(elideSettings).to(ElideSettings.class);
                 bind(elideSettings.getDictionary()).to(EntityDictionary.class);
                 bind(elideSettings.getDataStore()).to(DataStore.class).named("elideDataStore");
+
+                // Binding async service
+                AsyncExecutorService asyncExecService = new AsyncExecutorService(elide);
+                bind(asyncExecService).to(AsyncExecutorService.class);
+
             }
         });
 
