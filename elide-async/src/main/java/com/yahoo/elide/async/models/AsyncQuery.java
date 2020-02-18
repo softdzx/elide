@@ -8,13 +8,19 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import com.yahoo.elide.annotation.Include;
+import com.yahoo.elide.annotation.OnCreatePostCommit;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
+import com.yahoo.elide.async.service.AsyncExecutorService;
+import com.yahoo.elide.async.service.QueryThread;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Entity
 @Include(type = "query", rootLevel = true)
 //@ReadPermission(expression = "Principal is Owner")
 //@UpdatePermission(expression = "None")
+@Slf4j
 public class AsyncQuery implements PrincipalOwned {
     @Id
     UUID id; //Can be generated or provided.
@@ -23,6 +29,7 @@ public class AsyncQuery implements PrincipalOwned {
     String principalName;
 
     String query;  //JSON-API PATH or GraphQL payload.
+
     QueryType queryType; //GRAPHQL, JSONAPI
 
 //    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
@@ -38,5 +45,11 @@ public class AsyncQuery implements PrincipalOwned {
 	public String getPrincipalName() {
 		return principalName;
 	}
+
+    @OnCreatePostCommit
+    public void executeQueryFromExecutor() {
+        log.info("AsyncExecutorService executor starting to execute query");
+        AsyncExecutorService.executeQuery(query, queryType);
+    }
 
 }
