@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Auto Configuration For Elide Services.  Override any of the beans (by defining your own) to change
+ * Async Configuration For Elide Services.  Override any of the beans (by defining your own) to change
  * the default behavior.
  */
 @Configuration
@@ -25,12 +25,11 @@ import org.springframework.context.annotation.Configuration;
 public class ElideAsyncConfiguration {
 
     /**
-     * Creates a singular swagger document for JSON-API.
+     * Updates the entity dictionary for Elide by binding the Async Models.
      * @param dictionary Contains the static metadata about Elide models.
-     * @param settings Elide configuration settings.
-     * @return An instance of a JPA DataStore.
+     * @return updated instance of dictionary.
      */
-    public EntityDictionary bindAsyncDictionary(EntityDictionary dictionary, ElideConfigProperties settings) {
+    public EntityDictionary bindAsyncDictionary(EntityDictionary dictionary) {
 
         dictionary.bindEntity(AsyncQuery.class);
         dictionary.bindEntity(AsyncQueryResult.class);

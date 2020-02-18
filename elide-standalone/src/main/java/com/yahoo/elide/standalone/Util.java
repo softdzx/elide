@@ -70,8 +70,11 @@ public class Util {
     public static List<String> combineModelEntities(String modelPackageName, String asyncModelPackageName) {
 
     	List<String> modelEntities = getAllEntities(modelPackageName);
-    	modelEntities.addAll(getAllEntities(asyncModelPackageName));
-    	
+
+        if (asyncModelPackageName != null) {
+            modelEntities.addAll(getAllEntities(asyncModelPackageName));
+        }
+
         return modelEntities;
     }
     

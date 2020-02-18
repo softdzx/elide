@@ -145,7 +145,7 @@ public interface ElideStandaloneSettings {
      * @return
      */
     default String getAsyncModelPackageName() {
-        return AsyncQuery.class.getPackage().getName();
+        return (enableAsync() ? AsyncQuery.class.getPackage().getName() : null);
     }
 
     /**
