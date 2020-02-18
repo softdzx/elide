@@ -54,6 +54,11 @@
             <version>5.0.0-pr6-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.yahoo.elide</groupId>
+            <artifactId>elide-graphql</artifactId>
+            <version>5.0.0-pr6-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.10</version>
