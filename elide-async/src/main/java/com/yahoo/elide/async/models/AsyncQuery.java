@@ -13,14 +13,13 @@ import com.yahoo.elide.annotation.Include;
 import com.yahoo.elide.annotation.OnCreatePostCommit;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
-import com.yahoo.elide.async.models.security.IsOwner.AsyncQueryOwner;
 import com.yahoo.elide.async.service.AsyncExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Entity
 @Include(type = "query", rootLevel = true)
-@ReadPermission(expression = AsyncQueryOwner.PRINCIPAL_IS_OWNER)
+@ReadPermission(expression = "Principal is Owner")
 @UpdatePermission(expression = "Prefab.Role.None")
 @Slf4j
 public class AsyncQuery implements PrincipalOwned {
@@ -34,7 +33,7 @@ public class AsyncQuery implements PrincipalOwned {
 
     QueryType queryType; //GRAPHQL, JSONAPI
 
-//    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
+    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
     QueryStatus status;
 
     @OneToOne
@@ -46,6 +45,10 @@ public class AsyncQuery implements PrincipalOwned {
     @Override
 	public String getPrincipalName() {
 		return principalName;
+	}
+    
+	public QueryStatus getQueryStatus() {
+		return status;
 	}
 
     @Inject

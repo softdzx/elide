@@ -1,8 +1,6 @@
 package com.yahoo.elide.async.models;
 
-import java.security.Principal;
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.persistence.Entity;
@@ -14,11 +12,10 @@ import com.yahoo.elide.annotation.Exclude;
 import com.yahoo.elide.annotation.Include;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
-import com.yahoo.elide.async.models.security.IsOwner.AsyncQueryOwner;
 
 @Entity
 @Include(type="queryResult")
-@ReadPermission(expression = AsyncQueryOwner.PRINCIPAL_IS_OWNER)
+@ReadPermission(expression = "Principal is Owner")
 @UpdatePermission(expression = "Prefab.Role.None")
 @CreatePermission(expression = "Prefab.Role.None")
 public class AsyncQueryResult implements PrincipalOwned {
