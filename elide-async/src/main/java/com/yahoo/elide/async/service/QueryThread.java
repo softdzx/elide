@@ -12,6 +12,7 @@ import org.apache.http.client.utils.URIBuilder;
 import com.yahoo.elide.Elide;
 import com.yahoo.elide.ElideResponse;
 import com.yahoo.elide.async.models.QueryType;
+import com.yahoo.elide.graphql.QueryRunner;
 import com.yahoo.elide.security.RequestScope;
 
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +24,16 @@ public class QueryThread implements Runnable {
 	private QueryType queryType;
 	private RequestScope scope;
 	private Elide elide;
+	private QueryRunner runner;
 
 
-    public QueryThread(String query, QueryType queryType, RequestScope scope, Elide elide){
+    public QueryThread(String query, QueryType queryType, RequestScope scope, Elide elide, QueryRunner runner){
         log.info("New thread created");
         this.query = query;
         this.queryType = queryType;
         this.scope = scope;
         this.elide = elide;
+        this.runner = runner;
     }
 
     @Override
@@ -47,17 +50,19 @@ public class QueryThread implements Runnable {
             log.info("queryType: {}", queryType);
             Principal principal = ((Principal) scope.getUser().getOpaqueUser());
             log.info("Principal name: {}", principal.getName());
-            MultivaluedMap<String, String> queryParams = getQueryParams(query);
             log.info("Principal name: {}", principal.getName());
             if (queryType.equals(QueryType.JSONAPI_V1_0)) {
+                MultivaluedMap<String, String> queryParams = getQueryParams(query);
                 ElideResponse response = elide.get(getPath(query), queryParams, scope.getUser().getOpaqueUser());
-                log.info("getResponseCode: {}", response.getResponseCode());
-                log.info("getBody: {}", response.getBody());
+                log.info("JSONAPI_V1_0 getResponseCode: {}", response.getResponseCode());
+                log.info("JSONAPI_V1_0 getBody: {}", response.getBody());
                 // if 200 - response code then Change async query to complete else change to Failure
                 // add async query result no matter what the response
             }
             else if (queryType.equals(QueryType.GRAPHQL_V1_0)) {
-                log.error("GraphQL not implemented yet ");
+                ElideResponse response = runner.run(query, principal);
+                log.info("GRAPHQL_V1_0 getResponseCode: {}", response.getResponseCode());
+                log.info("GRAPHQL_V1_0 getBody: {}", response.getBody());
             }
 
         } catch (InterruptedException e) {
