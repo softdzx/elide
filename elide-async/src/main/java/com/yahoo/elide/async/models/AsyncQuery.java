@@ -34,7 +34,8 @@ public class AsyncQuery implements PrincipalOwned {
 
     QueryType queryType; //GRAPHQL, JSONAPI
 
-    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
+    //@UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
+    @UpdatePermission(expression = "Principal is Owner")
     QueryStatus status;
 
     @OneToOne
@@ -59,6 +60,6 @@ public class AsyncQuery implements PrincipalOwned {
     @OnCreatePostCommit
     public void executeQueryFromExecutor(RequestScope scope) {
         log.info("AsyncExecutorService executor object: {}", asyncExecutorService);
-        asyncExecutorService.executeQuery(query, queryType, scope);
+        asyncExecutorService.executeQuery(query, queryType, id, scope);
     }
 }
