@@ -5,13 +5,17 @@
  */
 package com.yahoo.elide.spring.config;
 
+import com.yahoo.elide.Elide;
 import com.yahoo.elide.async.models.AsyncQuery;
 import com.yahoo.elide.async.models.AsyncQueryResult;
+import com.yahoo.elide.async.service.AsyncExecutorService;
 import com.yahoo.elide.core.EntityDictionary;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -35,5 +39,16 @@ public class ElideAsyncConfiguration {
         dictionary.bindEntity(AsyncQueryResult.class);
 
         return dictionary;
+    }
+    
+    /**
+     * Configure the AsyncExecutorService used for submitting async query requests.
+     * @param elide elideObject
+     * @return a AsyncExecutorService
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public AsyncExecutorService buildAsyncExecutorService(Elide elide) {
+        return new AsyncExecutorService(elide);
     }
 }

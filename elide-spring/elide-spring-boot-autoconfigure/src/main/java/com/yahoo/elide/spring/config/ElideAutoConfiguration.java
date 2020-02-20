@@ -146,4 +146,5 @@ public class ElideAutoConfiguration {
     public QueryEngineFactory buildQueryEngineFactory(EntityManagerFactory entityManagerFactory) {
         return new SQLQueryEngineFactory(entityManagerFactory);
     }
+
 }
