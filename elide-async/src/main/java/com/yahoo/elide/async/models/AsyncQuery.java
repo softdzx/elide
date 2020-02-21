@@ -7,6 +7,8 @@ import javax.inject.Inject;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Transient;
 
 import com.yahoo.elide.annotation.Include;
@@ -61,5 +63,15 @@ public class AsyncQuery implements PrincipalOwned {
     public void executeQueryFromExecutor(RequestScope scope) {
         log.info("AsyncExecutorService executor object: {}", asyncExecutorService);
         asyncExecutorService.executeQuery(query, queryType, id, scope);
+    }
+    
+    @PrePersist
+    public void prePersist() {
+        createdOn = updatedOn = new Date();
+    }
+    
+    @PreUpdate
+    public void preUpdate() {
+        updatedOn = new Date();
     }
 }

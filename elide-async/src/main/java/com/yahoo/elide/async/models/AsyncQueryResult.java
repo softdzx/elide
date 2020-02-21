@@ -6,6 +6,8 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 import com.yahoo.elide.annotation.CreatePermission;
 import com.yahoo.elide.annotation.Exclude;
@@ -37,5 +39,15 @@ public class AsyncQueryResult implements PrincipalOwned {
     @Exclude
     public String getPrincipalName() {
        return query.getPrincipalName();
+    }
+    
+    @PrePersist
+    public void prePersist() {
+        createdOn = updatedOn = new Date();
+    }
+    
+    @PreUpdate
+    public void preUpdate() {
+        updatedOn = new Date();
     }
 }
