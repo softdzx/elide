@@ -27,9 +27,9 @@ public class AsyncExecutorService {
 	// Simple threadpool of size 5 for testing
 	private static ExecutorService executor = Executors.newFixedThreadPool(5);
 
-	public void executeQuery(String query, QueryType queryType, UUID id, RequestScope scope) {
+	public void executeQuery(String query, QueryType queryType, RequestScope scope, UUID id) {
 		Runnable queryWorker = new QueryThread(query, queryType, scope, elide, runner, id);
-		// Change async query in db to queued (If user submits with some other status
+		// Change async query in db to queued (If user submits with some other status)
 		executor.execute(queryWorker);
 	}
 
