@@ -204,6 +204,33 @@ public interface ElideStandaloneSettings {
     default boolean enableAsync() {
         return true;
     }
+    
+    /**
+     * Thread Size for Async queries to run in parallel.
+     *
+     * @return Default: 5
+     */
+    default Integer getAsyncThreadSize() {
+        return 5;
+    }
+
+    /**
+     * Maximum Query Run time for Async Queries to mark as TIMEDOUT.
+     *
+     * @return Default: 60
+     */
+    default Integer getMaxRunTime() {
+        return 60;
+    }
+
+    /**
+     * Number of hosts running Elide Service.
+     *
+     * @return Default: 1
+     */
+    default Integer getNumberOfHosts() {
+        return 1;
+    }
 
     /**
      * Whether Dates should be ISO8601 strings (true) or epochs (false).

@@ -34,7 +34,7 @@ public class ElideConfigProperties {
     /**
      * Settings for the Async.
      */
-    private ControllerProperties async;
+    private AsyncProperties async;
 
     /**
      * Default pagination size for collections if the client doesn't paginate.

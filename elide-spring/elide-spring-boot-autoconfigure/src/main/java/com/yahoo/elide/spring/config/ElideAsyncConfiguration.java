@@ -43,12 +43,14 @@ public class ElideAsyncConfiguration {
     
     /**
      * Configure the AsyncExecutorService used for submitting async query requests.
-     * @param elide elideObject
-     * @return a AsyncExecutorService
+     * @param elide elideObject.
+     * @param settings Elide settings.
+     * @return a AsyncExecutorService.
      */
     @Bean
     @ConditionalOnMissingBean
-    public AsyncExecutorService buildAsyncExecutorService(Elide elide) {
-        return new AsyncExecutorService(elide);
+    public AsyncExecutorService buildAsyncExecutorService(Elide elide, ElideConfigProperties settings) {
+        return new AsyncExecutorService(elide, settings.getAsync().getThreadPoolSize(), settings.getAsync().getMaxRunTime(), 
+                settings.getAsync().getNumberOfHosts());
     }
 }

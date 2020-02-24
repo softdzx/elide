@@ -86,7 +86,8 @@ public class ElideResourceConfig extends ResourceConfig {
                 bind(elideSettings.getDataStore()).to(DataStore.class).named("elideDataStore");
 
                 // Binding async service
-                AsyncExecutorService asyncExecService = new AsyncExecutorService(elide);
+                AsyncExecutorService asyncExecService = new AsyncExecutorService(elide, settings.getAsyncThreadSize(), 
+                        settings.getMaxRunTime(), settings.getNumberOfHosts());
                 bind(asyncExecService).to(AsyncExecutorService.class);
 
             }
