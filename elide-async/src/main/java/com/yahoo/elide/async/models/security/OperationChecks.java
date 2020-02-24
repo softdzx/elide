@@ -13,28 +13,20 @@ import com.yahoo.elide.security.checks.OperationCheck;
 
 public class OperationChecks {
     @SecurityCheck(AsyncQueryOwner.PRINCIPAL_IS_OWNER)
-    public static class AsyncQueryOwner extends OperationCheck<AsyncQuery> {
+    public static class AsyncQueryOwner extends OperationCheck<Object> {
         
         public static final String PRINCIPAL_IS_OWNER = "Principal is Owner";
        
         @Override
-        public boolean ok(AsyncQuery object, RequestScope requestScope, Optional<ChangeSpec> changeSpec) {
+        public boolean ok(Object object, RequestScope requestScope, Optional<ChangeSpec> changeSpec) {
             Principal principal = ((Principal) requestScope.getUser().getOpaqueUser());
-            return object.getPrincipalName().equals(principal.getName());
+            if(object.getClass().equals(AsyncQuery.class)) {
+            	return ((AsyncQuery) object).getPrincipalName().equals(principal.getName());
+            } else {
+            	return ((AsyncQueryResult) object).getPrincipalName().equals(principal.getName());
+            }
         }
     }
-
-//    @SecurityCheck(AsyncQueryResultOwner.PRINCIPAL_IS_OWNER)
-//    public static class AsyncQueryResultOwner extends OperationCheck<AsyncQueryResult> {
-//
-//    	public static final String PRINCIPAL_IS_OWNER = "Principal is Owner";
-//
-//    	@Override
-//    	public boolean ok(AsyncQueryResult object, RequestScope requestScope, Optional<ChangeSpec> changeSpec) {
-//    		Principal principal = ((Principal) requestScope.getUser().getOpaqueUser());
-//    		return object.getPrincipalName().equals(principal.getName());
-//    	}
-//    }
 
     @SecurityCheck(AsyncQueryStatusValue.VALUE_IS_CANCELLED)
     public static class AsyncQueryStatusValue extends OperationCheck<AsyncQuery> {
