@@ -62,7 +62,7 @@ public class AsyncQuery implements PrincipalOwned {
     @OnCreatePostCommit
     public void executeQueryFromExecutor(RequestScope scope) {
         log.info("AsyncExecutorService executor object: {}", asyncExecutorService);
-        asyncExecutorService.executeQuery(query, queryType, id, scope);
+        asyncExecutorService.executeQuery(query, queryType, scope, id);
     }
     
     @PrePersist
