@@ -78,4 +78,8 @@ public class AsyncQuery implements PrincipalOwned {
     public void preUpdate() {
         updatedOn = new Date();
     }
+
+	public void setResult(AsyncQueryResult result) {
+		this.result = result;
+	}
 }

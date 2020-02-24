@@ -17,7 +17,7 @@ import com.yahoo.elide.annotation.UpdatePermission;
 
 @Entity
 @Include(type="queryResult")
-@ReadPermission(expression = "Principal is Owner")
+//@ReadPermission(expression = "Principal is Owner")
 @UpdatePermission(expression = "Prefab.Role.None")
 @CreatePermission(expression = "Prefab.Role.None")
 public class AsyncQueryResult implements PrincipalOwned {
@@ -50,4 +50,24 @@ public class AsyncQueryResult implements PrincipalOwned {
     public void preUpdate() {
         updatedOn = new Date();
     }
+
+	public void setContentLength(Integer contentLength) {
+		this.contentLength = contentLength;
+	}
+
+	public void setResponseBody(String responseBody) {
+		this.responseBody = responseBody;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public void setQuery(AsyncQuery query) {
+		this.query = query;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
+	}
 }
