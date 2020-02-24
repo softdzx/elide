@@ -20,6 +20,7 @@ public class OperationChecks {
         @Override
         public boolean ok(Object object, RequestScope requestScope, Optional<ChangeSpec> changeSpec) {
             Principal principal = ((Principal) requestScope.getUser().getOpaqueUser());
+
             if(object.getClass().equals(AsyncQuery.class)) {
             	return ((AsyncQuery) object).getPrincipalName().equals(principal.getName());
             } else {
