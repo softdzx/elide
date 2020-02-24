@@ -28,6 +28,7 @@ public class AsyncExecutorService {
 	private QueryRunner runner;
 	private ExecutorService executor;
 	private ScheduledExecutorService cleaner;
+	//private RequestScope scope;
 	
 	@Inject
     public AsyncExecutorService(Elide elide, Integer threadPoolSize, Integer maxRunTime, Integer numberOfNodes) {
@@ -37,9 +38,10 @@ public class AsyncExecutorService {
 		log.info("AsyncExecThreadCorePoolSize=" + ((ThreadPoolExecutor) executor).getCorePoolSize());
 		log.info("AsyncExecThreadMaxPoolSize=" + ((ThreadPoolExecutor) executor).getMaximumPoolSize());
 		
+		
 		// Setting up query cleaner that marks loing running query as TIMEDOUT.
 		cleaner = AsyncQueryCleaner.getInstance().getExecutorService(); 
-		CleanUpTask cleanUpTask = new CleanUpTask(maxRunTime);
+		CleanUpTask cleanUpTask = new CleanUpTask(maxRunTime, elide);
 		log.info("AsycnCleanUpTaskMaxRunTime=" + cleanUpTask.maxRunTime);
 		
 		// Since there will be multiple hosts running the elide service,

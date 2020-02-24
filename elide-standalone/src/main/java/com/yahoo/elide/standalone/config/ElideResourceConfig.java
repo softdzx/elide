@@ -75,7 +75,6 @@ public class ElideResourceConfig extends ResourceConfig {
                 // Bind elide instance for injection into endpoint
                 bind(elide).to(Elide.class).named("elide");
 
-
                 // Bind user extraction function for endpoint
                 bind(settings.getUserExtractionFunction())
                         .to(DefaultOpaqueUserFunction.class).named("elideUserExtractionFunction");
