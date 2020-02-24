@@ -16,7 +16,7 @@ import com.yahoo.elide.annotation.OnCreatePostCommit;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
 import com.yahoo.elide.async.service.AsyncExecutorService;
-import com.yahoo.elide.security.RequestScope;
+import com.yahoo.elide.core.RequestScope;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +53,10 @@ public class AsyncQuery implements PrincipalOwned {
     
 	public QueryStatus getQueryStatus() {
 		return status;
+	}
+
+	public void setQueryStatus(QueryStatus status) {
+		this.status = status;
 	}
 
     @Inject
