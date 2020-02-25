@@ -42,13 +42,6 @@ public class AsyncQueryThread implements Runnable {
         this.elide = elide;
         this.runner = runner;
         this.id = id;
-
-        // Change async query in Datastore to queued
-        try {
-            updateAsyncQueryStatus(QueryStatus.QUEUED, id);
-        } catch (IOException e) {
-            log.error("IOException: {}", e.getMessage());
-        }
     }
 
     @Override
@@ -110,7 +103,8 @@ public class AsyncQueryThread implements Runnable {
      * This method parses the url and gets the query params and adds them into a MultivaluedMap
      * to be used by underlying Elide.get method
      * @param query query from the Async request
-     * @throws URISyntaxException
+     * @throws URISyntaxException URISyntaxException from malformed or incorrect URI
+     * @return MultivaluedMap with query parameters
      * */
     protected MultivaluedMap<String, String> getQueryParams(String query) throws URISyntaxException {
         URIBuilder uri;
@@ -127,7 +121,8 @@ public class AsyncQueryThread implements Runnable {
      * This method parses the url and gets the query params and retrieves path
      * to be used by underlying Elide.get method
      * @param query query from the Async request
-     * @throws URISyntaxException
+     * @throws URISyntaxException URISyntaxException from malformed or incorrect URI
+     * @return Path extracted from URI
      * */
     protected String getPath(String query) throws URISyntaxException {
         URIBuilder uri;
@@ -140,9 +135,10 @@ public class AsyncQueryThread implements Runnable {
      * This method updates the model for AsyncQuery
      * @param status new status based on the enum QueryStatus
      * @param asyncQueryId queryId from asyncQuery request
-     * @throws IOException
+     * @throws IOException IOException from DataStoreTransaction
+     * @return AsyncQuery Object
      * */
-    private AsyncQuery updateAsyncQueryStatus(QueryStatus status, UUID asyncQueryId) throws IOException {
+    protected AsyncQuery updateAsyncQueryStatus(QueryStatus status, UUID asyncQueryId) throws IOException {
         log.debug("Updating AsyncQuery status to {}", status);
         DataStoreTransaction tx = elide.getDataStore().beginTransaction();
         EntityProjection asyncQueryCollection = EntityProjection.builder()
@@ -159,11 +155,11 @@ public class AsyncQueryThread implements Runnable {
 
     /**
      * This method updates the model for AsyncQuery
-     * @param status AsyncQueryResult object to be associated with the AsyncQuery object
+     * @param asyncQueryResult AsyncQueryResult object to be associated with the AsyncQuery object
      * @param asyncQueryId UUID of the AsyncQuery to be associated with the AsyncQueryResult object
-     * @throws IOException
+     * @throws IOException IOException from DataStoreTransaction
      * */
-    private void updateAsyncQueryStatus(AsyncQueryResult asyncQueryResult, UUID asyncQueryId) throws IOException {
+    protected void updateAsyncQueryStatus(AsyncQueryResult asyncQueryResult, UUID asyncQueryId) throws IOException {
         log.debug("Updating AsyncQueryResult to {}", asyncQueryResult);
         DataStoreTransaction tx = elide.getDataStore().beginTransaction();
         EntityProjection asyncQueryCollection = EntityProjection.builder()
@@ -183,9 +179,10 @@ public class AsyncQueryThread implements Runnable {
      * @param responseBody ElideResponse responseBody from AsyncQuery
      * @param asyncQuery AsyncQuery object to be associated with the AsyncQueryResult object
      * @param asyncQueryId UUID of the AsyncQuery to be associated with the AsyncQueryResult object
-     * @throws IOException
+     * @throws IOException IOException from DataStoreTransaction
+     * @return AsyncQueryResult Object
      * */
-    private AsyncQueryResult createAsyncQueryResult(Integer status, String responseBody, AsyncQuery asyncQuery, UUID asyncQueryId) throws IOException {
+    protected AsyncQueryResult createAsyncQueryResult(Integer status, String responseBody, AsyncQuery asyncQuery, UUID asyncQueryId) throws IOException {
 		log.debug("Adding AsyncQueryResult entry");
         DataStoreTransaction tx = elide.getDataStore().beginTransaction();
         AsyncQueryResult asyncQueryResult = new AsyncQueryResult();

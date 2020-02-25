@@ -1,5 +1,6 @@
 package com.yahoo.elide.async.service;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.yahoo.elide.Elide;
+import com.yahoo.elide.async.models.QueryStatus;
 import com.yahoo.elide.async.models.QueryType;
 import com.yahoo.elide.core.RequestScope;
 import com.yahoo.elide.graphql.QueryRunner;
@@ -53,7 +55,13 @@ public class AsyncExecutorService {
 	}
 	
 	public void executeQuery(String query, QueryType queryType, RequestScope scope, UUID id) {
-		Runnable queryWorker = new AsyncQueryThread(query, queryType, scope, elide, runner, id);
+		AsyncQueryThread queryWorker = new AsyncQueryThread(query, queryType, scope, elide, runner, id);
+		// Change async query in Datastore to queued
+		try {
+			queryWorker.updateAsyncQueryStatus(QueryStatus.QUEUED, id);
+		} catch (IOException e) {
+			log.error("IOException: {}", e.getMessage());
+		}
 		executor.execute(queryWorker);
 	}
 }
