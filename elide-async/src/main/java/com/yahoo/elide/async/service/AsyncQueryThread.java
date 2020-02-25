@@ -71,8 +71,8 @@ public class AsyncQueryThread implements Runnable {
             log.debug("queryType: {}", queryType);
             Principal principal = ((Principal) scope.getUser().getOpaqueUser());
             log.debug("Principal name: {}", principal.getName());
-            AsyncQuery asyncQuery = null;
-            AsyncQueryResult asyncQueryResult = null;
+            AsyncQuery asyncQuery;
+            AsyncQueryResult asyncQueryResult;
             if (queryType.equals(QueryType.JSONAPI_V1_0)) {
                 MultivaluedMap<String, String> queryParams = getQueryParams(query);
                 response = elide.get(getPath(query), queryParams, scope.getUser().getOpaqueUser());
