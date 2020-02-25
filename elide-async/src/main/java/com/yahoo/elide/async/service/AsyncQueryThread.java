@@ -58,7 +58,7 @@ public class AsyncQueryThread implements Runnable {
             // Change async query to processing
             updateAsyncQueryStatus(QueryStatus.PROCESSING, id);
             //Just doing sleep for async testing
-            Thread.sleep(60000);
+            Thread.sleep(180000);
             ElideResponse response = null;
             log.debug("query: {}", query);
             log.debug("queryType: {}", queryType);
@@ -94,7 +94,9 @@ public class AsyncQueryThread implements Runnable {
             log.error("IOException: {}", e.getMessage());
         } catch (URISyntaxException e) {
             log.error("URISyntaxException: {}", e.getMessage());
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            log.error("InterruptedException: {}", e.getMessage());
+        }  catch (Exception e) {
             log.error("Exception: {}", e.getMessage());
         }
     }

@@ -11,7 +11,7 @@ import com.yahoo.elide.security.ChangeSpec;
 import com.yahoo.elide.security.RequestScope;
 import com.yahoo.elide.security.checks.OperationCheck;
 
-public class OperationChecks {
+public class AsyncQueryOperationChecks {
     @SecurityCheck(AsyncQueryOwner.PRINCIPAL_IS_OWNER)
     public static class AsyncQueryOwner extends OperationCheck<Object> {
         

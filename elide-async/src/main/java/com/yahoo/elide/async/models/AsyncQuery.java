@@ -84,13 +84,7 @@ public class AsyncQuery implements PrincipalOwned {
 		this.result = result;
 	}
 	
-//	@PostConstruct
-//	public void setRequestScope(RequestScope scope) {
-//		log.info("Setting RequestScope in AsyncQuery");
-//		AsyncExecutorService.setRequestScope(scope);
-//	}
-	
-	static {
-		log.info("Setting RequestScope in AsyncQuery");
+	public Date getCreatedOn() {
+		return this.createdOn;
 	}
 }
