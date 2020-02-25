@@ -3,7 +3,6 @@ package com.yahoo.elide.async.service;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.yahoo.elide.Elide;
@@ -18,26 +17,26 @@ import com.yahoo.elide.request.EntityProjection;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Runnable thread for updating AsyncQueryThread status  
+ * beyond the max run time and if not terminated by interrupt process
+ * due to app/host crash or restart.
+ */
 @Slf4j
 public class AsyncQueryCleanerThread implements Runnable {
 
     int maxRunTime;
     Elide elide;
-    boolean interrupt;
     
-    AsyncQueryCleanerThread(int maxRunTime, Elide elide, boolean interrupt) {
+    AsyncQueryCleanerThread(int maxRunTime, Elide elide) {
+    	log.debug("New Async Query Cleaner thread created");
         this.maxRunTime = maxRunTime;
         this.elide = elide;
-        this.interrupt = interrupt;
     }
 
     @Override
     public void run() {
-        if(interrupt) {
-            interruptAsyncQuery();
-        } else {
-            timeoutAsyncQuery();
-        }
+        timeoutAsyncQuery();
     }
     
     /**
@@ -48,7 +47,6 @@ public class AsyncQueryCleanerThread implements Runnable {
     	DataStoreTransaction tx = elide.getDataStore().beginTransaction();
     	
     	try {
-
             EntityDictionary dictionary = elide.getElideSettings().getDictionary();
             RSQLFilterDialect filterParser = new RSQLFilterDialect(dictionary);
             RequestScope scope = new RequestScope(null, null, tx, null, null, elide.getElideSettings());
@@ -61,16 +59,15 @@ public class AsyncQueryCleanerThread implements Runnable {
                     .filterExpression(filter)
                     .build();
 
-            //AsyncQuery query = (AsyncQuery) tx.loadObjects(asyncQueryCollection, UUID.fromString("ba31ca4e-ed8f-4be0-a0f3-12088fa9263e"), scope);
             Iterable<Object> loaded = tx.loadObjects(asyncQueryCollection, scope);
             Iterator<Object> itr = loaded.iterator();
             while(itr.hasNext()) {
-            	log.info("Updating Async Query Status to TIMEDOUT");
             	AsyncQuery query = (AsyncQuery) itr.next(); 
             	long differenceInMillies = Math.abs((new Date()).getTime() - query.getCreatedOn().getTime());
             	long difference = TimeUnit.MINUTES.convert(differenceInMillies, TimeUnit.MILLISECONDS);
-            	log.info("difference=" + difference);
-            	if(difference > 0) {
+       
+            	// Check if its twice as long as max run time. It means the host/app crashed or restarted.
+            	if(difference > maxRunTime * 2) {
             		log.info("Updating Async Query Status to TIMEDOUT");
                     query.setQueryStatus(QueryStatus.TIMEDOUT);
                     tx.save(query, scope);
@@ -79,51 +76,13 @@ public class AsyncQueryCleanerThread implements Runnable {
             	}
             }
 		} catch (Exception e) {
-           e.printStackTrace();
+			log.error("Exception: {}", e.getMessage());
 		} finally {
 			try {
 				tx.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				log.error("IOException: {}", e.getMessage());
 			}
 		}
-    }
-    
-    /**
-     * This method interrupts the long running AsyncQueryThread.
-     * */
-    private void interruptAsyncQuery() {
-    	List<FutureTask> futures= AsyncExecutorService.futures;
-        Iterator<FutureTask> itr = futures.iterator();
-        while (itr.hasNext()) {
-        	FutureTask futureDetail  = (FutureTask) itr.next();
-        	long differenceInMillies = Math.abs((new Date()).getTime() - futureDetail.submittedOn.getTime());
-        	long difference = TimeUnit.MINUTES.convert(differenceInMillies, TimeUnit.MILLISECONDS);
-        	if(difference > 1 && futureDetail.future.isDone() == false) {
-        		futureDetail.future.cancel(true);
-        		futures.remove(futureDetail);
-        		DataStoreTransaction tx = elide.getDataStore().beginTransaction();
-        		try{ 
-        		log.debug("Thread interrupted, updating AsyncQuery status to {}", QueryStatus.FAILURE);
-                RequestScope scope = new RequestScope(null, null, tx, null, null, elide.getElideSettings());
-                EntityProjection asyncQueryCollection = EntityProjection.builder()
-                    .type(AsyncQuery.class)
-                    .build();
-                AsyncQuery query = (AsyncQuery) tx.loadObject(asyncQueryCollection, futureDetail.id, scope);
-                query.setQueryStatus(QueryStatus.FAILURE);
-                tx.save(query, scope);
-                tx.commit(scope);
-                tx.flush(scope);
-        		} catch (Exception e) {
-        	        e.printStackTrace();
-        		} finally {
-        			try {
-        				tx.close();
-        			} catch (IOException e) {
-        				e.printStackTrace();
-        			}
-        		}
-        	}
-        }
     }
 }

@@ -15,6 +15,9 @@ import com.yahoo.elide.annotation.Include;
 import com.yahoo.elide.annotation.ReadPermission;
 import com.yahoo.elide.annotation.UpdatePermission;
 
+/**
+ * Model for Async Query Result
+ */
 @Entity
 @Include(type="queryResult")
 @ReadPermission(expression = "Principal is Owner")

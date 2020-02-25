@@ -3,7 +3,6 @@ package com.yahoo.elide.async.models;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -21,6 +20,9 @@ import com.yahoo.elide.core.RequestScope;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Model for Async Query
+ */
 @Entity
 @Include(type = "query", rootLevel = true)
 @ReadPermission(expression = "Principal is Owner")
@@ -37,8 +39,7 @@ public class AsyncQuery implements PrincipalOwned {
 
     QueryType queryType; //GRAPHQL, JSONAPI
 
-    //@UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
-    @UpdatePermission(expression = "Principal is Owner")
+    @UpdatePermission(expression = "Principal is Owner AND value is Cancelled")
     QueryStatus status;
 
     @OneToOne

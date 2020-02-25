@@ -5,6 +5,9 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Singleton;
 
+/**
+ * Class for initializing the Query Executor.  
+ */
 @Singleton 
 class AsyncQueryExecutor {
 	

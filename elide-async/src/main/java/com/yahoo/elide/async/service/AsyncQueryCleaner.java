@@ -5,10 +5,11 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.inject.Singleton;
 
+/**
+ * Class for initializing the Query Cleaner.  
+ */
 @Singleton 
 class AsyncQueryCleaner {
-	
-	private final int DEFAULT_CLEANUP_TASKS = 2; //Interrupt & Timeout
 	
 	private static AsyncQueryCleaner cleaner;
     private ScheduledExecutorService cleanerService;
@@ -23,7 +24,7 @@ class AsyncQueryCleaner {
       }
 
     protected AsyncQueryCleaner() {
-    	cleanerService = Executors.newScheduledThreadPool(DEFAULT_CLEANUP_TASKS);
+    	cleanerService = Executors.newSingleThreadScheduledExecutor();
     }
 
 	protected ScheduledExecutorService getExecutorService() {
