@@ -28,7 +28,6 @@ public class AsyncExecutorService {
 	private QueryRunner runner;
 	private ExecutorService executor;
 	private ScheduledExecutorService cleaner;
-	//private RequestScope scope;
 	
 	@Inject
     public AsyncExecutorService(Elide elide, Integer threadPoolSize, Integer maxRunTime, Integer numberOfNodes) {
@@ -37,7 +36,6 @@ public class AsyncExecutorService {
 		executor = AsyncQueryExecutor.getInstance(threadPoolSize == null ? DEFAULT_THREADPOOL_SIZE : threadPoolSize).getExecutorService(); 
 		log.info("AsyncExecThreadCorePoolSize=" + ((ThreadPoolExecutor) executor).getCorePoolSize());
 		log.info("AsyncExecThreadMaxPoolSize=" + ((ThreadPoolExecutor) executor).getMaximumPoolSize());
-		
 		
 		// Setting up query cleaner that marks loing running query as TIMEDOUT.
 		cleaner = AsyncQueryCleaner.getInstance().getExecutorService(); 
@@ -51,11 +49,11 @@ public class AsyncExecutorService {
 		int initialDelay = random.ints(0, numberOfNodes*2).limit(1).findFirst().getAsInt();
 		
 		cleaner.scheduleWithFixedDelay(cleanUpTask, initialDelay, DEFAULT_CLEANUP_DELAY, TimeUnit.MINUTES);
+		//cleaner.scheduleWithFixedDelay(cleanUpTask, 1, DEFAULT_CLEANUP_DELAY, TimeUnit.MINUTES);
 	}
 	
 	public void executeQuery(String query, QueryType queryType, RequestScope scope, UUID id) {
 		Runnable queryWorker = new QueryThread(query, queryType, scope, elide, runner, id);
 		executor.execute(queryWorker);
 	}
-
 }

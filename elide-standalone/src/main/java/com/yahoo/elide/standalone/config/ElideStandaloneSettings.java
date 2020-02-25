@@ -69,7 +69,7 @@ public interface ElideStandaloneSettings {
         DataStore dataStore = new JpaDataStore(
                 () -> { return entityManagerFactory.createEntityManager(); },
                 (em -> { return new NonJtaTransaction(em); }));
-
+        
         EntityDictionary dictionary = new EntityDictionary(getCheckMappings(),
                 new Injector() {
                     @Override

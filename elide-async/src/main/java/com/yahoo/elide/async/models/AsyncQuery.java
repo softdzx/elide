@@ -3,6 +3,7 @@ package com.yahoo.elide.async.models;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -81,5 +82,15 @@ public class AsyncQuery implements PrincipalOwned {
 
 	public void setResult(AsyncQueryResult result) {
 		this.result = result;
+	}
+	
+//	@PostConstruct
+//	public void setRequestScope(RequestScope scope) {
+//		log.info("Setting RequestScope in AsyncQuery");
+//		AsyncExecutorService.setRequestScope(scope);
+//	}
+	
+	static {
+		log.info("Setting RequestScope in AsyncQuery");
 	}
 }

@@ -13,10 +13,7 @@ import com.yahoo.elide.async.models.AsyncQuery;
 import com.yahoo.elide.async.models.QueryStatus;
 import com.yahoo.elide.core.DataStoreTransaction;
 import com.yahoo.elide.core.EntityDictionary;
-import com.yahoo.elide.core.Path;
 import com.yahoo.elide.core.RequestScope;
-import com.yahoo.elide.core.filter.InPredicate;
-import com.yahoo.elide.core.filter.expression.FilterExpression;
 import com.yahoo.elide.request.EntityProjection;
 
 @Singleton 
@@ -56,9 +53,7 @@ class CleanUpTask implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Clean Long Running Query");
-        // Add logic to pull queries running longer than maxRunTime and change their status to TIMEDOUT.
-        //updateAsyncQueryStatus();
+        updateAsyncQueryStatus();
     }
     
     /**
@@ -67,12 +62,14 @@ class CleanUpTask implements Runnable {
      * @throws IOException 
      * */
     private void updateAsyncQueryStatus() {
-		//log.info("Updating AsyncQuery status to {}", status);
-        DataStoreTransaction tx = elide.getDataStore().beginTransaction();
+		DataStoreTransaction tx = elide.getDataStore().beginTransaction();
+        
         EntityDictionary dictionary = elide.getElideSettings().getDictionary();
-        //Class idType = dictionary.getIdType(AsyncQuery.class);
-        //String idField = dictionary.getIdFieldName(AsyncQuery.class);
-        RequestScope scope = new RequestScope(null, null, tx, null, null, settings);
+        Class idType = dictionary.getIdType(AsyncQuery.class);
+        String idField = dictionary.getIdFieldName(AsyncQuery.class);
+        //dictionary.get
+        
+        RequestScope scope = new RequestScope(null, null, tx, null, null, elide.getElideSettings());
             
         //FilterExpression idFilter = new InPredicate(
         //        new Path.PathElement(entityClass, idType, idField),
@@ -84,7 +81,7 @@ class CleanUpTask implements Runnable {
         //      .filterExpression(filterExpression)
                 .build();
 
-        AsyncQuery query = (AsyncQuery) tx.loadObject(asyncQueryCollection, "ba31ca4e-ed8f-4be0-a0f3-12088fa9263d", (com.yahoo.elide.core.RequestScope) scope);
+        AsyncQuery query = (AsyncQuery) tx.loadObject(asyncQueryCollection, UUID.fromString("ba31ca4e-ed8f-4be0-a0f3-12088fa9263e"), scope);
         query.setQueryStatus(QueryStatus.TIMEDOUT);
         tx.save(query, scope);
         tx.commit(scope);
