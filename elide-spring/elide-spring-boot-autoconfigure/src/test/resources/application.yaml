@@ -20,7 +20,9 @@ elide:
     cleanupEnabled: true
     queryCleanupDays: 7
     defaultAsyncQueryDAO: true
-
+  dynamic-config:
+    path: https://raw.githubusercontent.com/yahoo/elide/453ff53400acebd3eeaf6d780abe963060fcf431/elide-contrib/elide-dynamic-config-helpers/src/test/resources/table/valid_table.hjson
+    enabled: true
 spring:
   jpa:
     show_sql: true

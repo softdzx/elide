@@ -64,6 +64,7 @@ public class ElideAutoConfiguration {
                 .withAuditLogger(new Slf4jLogger())
                 .withISO8601Dates("yyyy-MM-dd'T'HH:mm'Z'", TimeZone.getTimeZone("UTC"));
 
+        System.out.println("Init Elide");
         return new Elide(builder.build());
     }
 
@@ -88,7 +89,7 @@ public class ElideAutoConfiguration {
                         return beanFactory.createBean(cls);
                     }
                 });
-
+        System.out.println("buildDictionary");
         dictionary.scanForSecurityChecks();
         return dictionary;
     }
@@ -103,6 +104,7 @@ public class ElideAutoConfiguration {
     public QueryEngine buildQueryEngine(EntityManagerFactory entityManagerFactory) {
         MetaDataStore metaDataStore = new MetaDataStore();
 
+        System.out.println("buildQueryEngine");
         return new SQLQueryEngine(metaDataStore, entityManagerFactory);
     }
 
@@ -121,6 +123,7 @@ public class ElideAutoConfiguration {
                 () -> { return entityManagerFactory.createEntityManager(); },
                     (em -> { return new NonJtaTransaction(em); }));
 
+        System.out.println("buildDataStore");
         // meta data store needs to be put at first to populate meta data models
         return new MultiplexManager(jpaDataStore, queryEngine.getMetaDataStore(), aggregationDataStore);
     }
@@ -141,7 +144,7 @@ public class ElideAutoConfiguration {
         SwaggerBuilder builder = new SwaggerBuilder(dictionary, info);
 
         Swagger swagger = builder.build().basePath(settings.getJsonApi().getPath());
-
+        System.out.println("buildSwagger");
         return swagger;
     }
 }
