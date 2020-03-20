@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import com.yahoo.elide.contrib.dynamicconfighelpers.parser.ElideTableToPojo;
 import com.yahoo.elide.contrib.dynamicconfighelpers.parser.handlebars.HandlebarsHydrator;
 import com.yahoo.elide.contrib.dynamicconfighelpers.model.ElideTable;
+
 import org.mdkt.compiler.InMemoryJavaCompiler;
 
 import java.util.Map;
@@ -14,7 +15,8 @@ public class EntityCompiler {
 	public String dynamicConfigPath = "";
 
     public static String [] classNames = {
-    		"com.yahoo.elide.contrib.dynamicconfig.model.PlayerStats"
+    		"com.yahoo.elide.contrib.dynamicconfig.model.PlayerStats",
+    		"com.yahoo.elide.contrib.dynamicconfig.model.AnotherPlayerStats"
 			/*
 			 * "example.models.ArtifactGroup", "example.models.ArtifactProduct",
 			 * "example.models.ArtifactVersion"
@@ -30,43 +32,19 @@ public class EntityCompiler {
 	public String getElideTable(String path) {
 		
 		try {
-			ElideTableToPojo securityPojo = new ElideTableToPojo();
-			ElideTable table = securityPojo.parseTableConfigFile(path);
+			ElideTableToPojo tablePojo = new ElideTableToPojo();
+			ElideTable table = tablePojo.parseTableConfigFile(path);
 			HandlebarsHydrator obj = new HandlebarsHydrator();
-			String tablePojo = obj.hydrateTableTemplate(table);
-		    System.out.println(tablePojo);
+			String tablePojoStr = obj.hydrateTableTemplate(table);
+		    System.out.println(tablePojoStr);
 		    
-		    return tablePojo;
+		    return tablePojoStr;
 		} catch (Exception e ) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
-	    
-		
-		/*return "package example.models;\n" +
-                "\n" +
-                "import com.yahoo.elide.annotation.Include;\n" +
-                "\n" +
-                "import javax.persistence.Entity;\n" +
-                "import javax.persistence.Id;\n" +
-                "import javax.persistence.OneToMany;\n" +
-                "import java.util.ArrayList;\n" +
-                "import java.util.List;\n" +
-                "\n" +
-                "@Include(rootLevel = true, type = \"artifactGroup\")\n" +
-                "@Entity\n" +
-                "public class ArtifactGroup {\n" +
-                "    @Id\n" +
-                "    private String name = \"\";\n" +
-                "\n" +
-                "    private String commonName = \"\";\n" +
-                "\n" +
-                "    private String description = \"\";\n" +
-                "\n" +
-                "    @OneToMany(mappedBy = \"group\")\n" +
-                "    private List<ArtifactProduct> products = new ArrayList<>();\n" +
-                "}";*/
+
     }
 
     public String getArtifactProduct() {

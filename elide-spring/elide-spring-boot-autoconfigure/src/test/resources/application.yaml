@@ -21,7 +21,7 @@ elide:
     queryCleanupDays: 7
     defaultAsyncQueryDAO: true
   dynamic-config:
-    path: https://raw.githubusercontent.com/yahoo/elide/453ff53400acebd3eeaf6d780abe963060fcf431/elide-contrib/elide-dynamic-config-helpers/src/test/resources/table/valid_table.hjson
+    path: https://git.ouroath.com/raw/aanandan/elide_config_schema/master/src/test/resources/table/valid_table.hjson?token=AAAG4ZQJS7PBWATHFQU7H226PX7QO
     enabled: true
 spring:
   jpa:

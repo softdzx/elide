@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, Yahoo Inc.
+ * Copyright 2020, Yahoo Inc.
  * Licensed under the Apache License, Version 2.0
  * See LICENSE file in project root for terms.
  */
@@ -52,7 +52,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 /**
- * Async Configuration For Elide Services.  Override any of the beans (by defining your own)
+ * Dynamic Configuration For Elide Services.  Override any of the beans (by defining your own)
  * and setting flags to disable in properties to change the default behavior.
  */
 @Configuration
@@ -65,16 +65,7 @@ public class ElideDynamicConfiguration {
 	
 	EntityCompiler compiler = new EntityCompiler();
 	
-	
-	/*
-	 * public String buildDynamicConfig(Elide elide, ElideConfigProperties settings)
-	 * { try {
-	 * System.out.println("Dynamic config path "+settings.getDynamicConfig().getPath
-	 * ()); readFilesLocalJava8(settings.getDynamicConfig().getPath()); return ""; }
-	 * catch (IOException e) { // TODO Auto-generated catch block
-	 * e.printStackTrace(); } return "String"; }
-	 */
-	
+
 	@Bean
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory(EntityManagerFactoryBuilder builder,
 	                                                                       DataSource source) throws IOException {
@@ -84,7 +75,10 @@ public class ElideDynamicConfiguration {
 	        try {
 	        	
 	            compiler.compile(configProperties.getDynamicConfig().getPath());
-	        } catch (Exception e) {}
+	            
+	        } catch (Exception e) {
+	        	
+	        }
 
 	        Collection<ClassLoader> classLoaders = new ArrayList<>();
 	        classLoaders.add(compiler.getClassLoader());
