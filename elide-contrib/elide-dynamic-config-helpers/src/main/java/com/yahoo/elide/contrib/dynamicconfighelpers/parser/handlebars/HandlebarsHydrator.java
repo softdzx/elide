@@ -17,6 +17,8 @@ import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for handlebars hydration.
@@ -34,12 +36,12 @@ public class HandlebarsHydrator {
     /**
      * Method to hydrate the Table template.
      * @param table
-     * @return table java class
+     * @return table java class list
      * @throws IOException
      */
-    public String hydrateTableTemplate(ElideTable table) throws IOException {
+    public List<String> hydrateTableTemplate(ElideTable table) throws IOException {
 
-        String tableClassAsString = null;
+        List<String> tableClassStringList = new ArrayList<>();
 
         TemplateLoader loader = new ClassPathTemplateLoader("/templates");
         Handlebars handlebars = new Handlebars(loader).with(MY_ESCAPING_STRATEGY);
@@ -48,9 +50,28 @@ public class HandlebarsHydrator {
         Template template = handlebars.compile("table");
 
         for (Table t : table.getTables()) {
-            tableClassAsString = template.apply(t);
+            tableClassStringList.add(template.apply(t));
         }
 
-        return tableClassAsString;
+        return tableClassStringList;
+    }
+
+    /**
+     * Method to return the List of Class Names hydrated.
+     * @param table
+     * @return table java class name list
+     * @throws IOException
+     */
+    public List<String> getTableClassNames(ElideTable table) throws IOException {
+
+        List<String> tableClassStringNameList = new ArrayList<>();
+
+        HandlebarsHelper helper = new HandlebarsHelper();
+
+        for (Table t : table.getTables()) {
+            tableClassStringNameList.add(helper.capitalizeFirstLetter(t.getName()));
+        }
+
+        return tableClassStringNameList;
     }
 }
