@@ -14,7 +14,6 @@ import org.json.JSONTokener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -99,8 +98,8 @@ public class ElideHjsonUtil {
      * @param input string to validate
      * @return whether string is null or not
      */
-    public static boolean isNull(String input) {
-        return (input == null || input.trim().length() == 0) ? true : false;
+    public static boolean isNullOrEmpty(String input) {
+        return (input == null || input.trim().length() == 0);
     }
 
     /**
@@ -110,13 +109,17 @@ public class ElideHjsonUtil {
      * @throws IOException
      */
     private static String readFileContent(BufferedReader reader) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-            sb.append(NEW_LINE);
+        try {
+            StringBuffer sb = new StringBuffer();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+                sb.append(NEW_LINE);
+            }
+            return sb.toString();
+        } finally {
+            reader.close();
         }
-        return sb.toString();
     }
 
     /**
