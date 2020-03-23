@@ -10,6 +10,9 @@ import com.yahoo.elide.core.DataStore;
 
 import com.yahoo.elide.datastores.jpa.JpaDataStore;
 import com.yahoo.elide.datastores.jpa.transaction.NonJtaTransaction;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
@@ -51,50 +54,49 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
+
 /**
- * Dynamic Configuration For Elide Services.  Override any of the beans (by defining your own)
- * and setting flags to disable in properties to change the default behavior.
+ * Dynamic Configuration For Elide Services. Override any of the beans (by
+ * defining your own) and setting flags to disable in properties to change the
+ * default behavior.
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties(ElideConfigProperties.class)
 @ConditionalOnExpression("${elide.dynamicConfig.enabled:true}")
 public class ElideDynamicConfiguration {
 
-	@Autowired
+    @Autowired
     private ElideConfigProperties configProperties;
-	
-	EntityCompiler compiler = new EntityCompiler();
-	
 
-	@Bean
-	public LocalContainerEntityManagerFactoryBean entityManagerFactory(EntityManagerFactoryBuilder builder,
-	                                                                       DataSource source) throws IOException {
+    @Bean
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(EntityManagerFactoryBuilder builder,
+            DataSource source) throws IOException {
 
-		System.out.println("Elide Dynamic Config "+configProperties.getDynamicConfig().getPath());
-		
-	        try {
-	        	
-	            compiler.compile(configProperties.getDynamicConfig().getPath());
-	            
-	        } catch (Exception e) {
-	        	
-	        }
+    	try {
+    		System.out.println("Elide Dynamic Config " + configProperties.getDynamicConfig().getPath());
+
+        	ElideDynamicEntityCompiler compiler = new ElideDynamicEntityCompiler(configProperties.getDynamicConfig().getPath());
+            
+        	compiler.compile(configProperties.getDynamicConfig().getPath());
+
+        
 
 	        Collection<ClassLoader> classLoaders = new ArrayList<>();
 	        classLoaders.add(compiler.getClassLoader());
 	        Map<String, Object> properties = new HashMap<>();
 	        properties.put(AvailableSettings.CLASSLOADERS, classLoaders);
-
+	
 	        Properties props = new Properties();
 	        props.putAll(properties);
-
-	        PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl("test",
-	                Arrays.asList(EntityCompiler.classNames), props, compiler.getClassLoader());
+	
+	        ElideDynamicPersistenceUnit pui = new ElideDynamicPersistenceUnit("dynamicConfiguration", ElideDynamicEntityCompiler.classNames, props,
+	                compiler.getClassLoader());
 	        pui.setNonJtaDataSource(source);
 	        pui.setJtaDataSource(source);
-
-	        new HibernateJpaVendorAdapter();
-
+	
+	        //new HibernateJpaVendorAdapter();
+	
 	        LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
 	        bean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 	        bean.setJpaPropertyMap(properties);
@@ -103,16 +105,20 @@ public class ElideDynamicConfiguration {
 	            public PersistenceUnitInfo obtainDefaultPersistenceUnitInfo() throws IllegalStateException {
 	                return pui;
 	            }
-
+	
 	            @Override
-	            public PersistenceUnitInfo obtainPersistenceUnitInfo(String persistenceUnitName) throws IllegalArgumentException, IllegalStateException {
+	            public PersistenceUnitInfo obtainPersistenceUnitInfo(String persistenceUnitName)
+	                    throws IllegalArgumentException, IllegalStateException {
 	                return pui;
 	            }
 	        });
-
-	        return bean;
-	    }
- 
-
 	
+	        return bean;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
 }

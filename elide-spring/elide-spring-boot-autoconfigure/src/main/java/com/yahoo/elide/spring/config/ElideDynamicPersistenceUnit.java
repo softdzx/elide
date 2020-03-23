@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Properties;
 
 @Data
-public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
+public class ElideDynamicPersistenceUnit implements PersistenceUnitInfo {
 
-    public PersistenceUnitInfoImpl(String persistenceUnitName, List<String> managedClassNames, Properties properties, ClassLoader loader) {
+    public ElideDynamicPersistenceUnit(String persistenceUnitName, List<String> managedClassNames, Properties properties, ClassLoader loader) {
         this.persistenceUnitName = persistenceUnitName;
         this.managedClassNames = managedClassNames;
         this.properties = properties;
