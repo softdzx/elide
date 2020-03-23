@@ -25,30 +25,28 @@ public class ElideDynamicEntityCompiler {
 
 	public static ArrayList<String> classNames = new ArrayList<String>();
 
-	public static final String PACKAGE_NAME = "com.yahoo.elide.spring.model.";
+	public static final String PACKAGE_NAME = "com.yahoo.elide.contrib.dynamicconfig.model.";
 	private Map<String, Class<?>> compiledObjects;
 
 	InMemoryJavaCompiler compiler = InMemoryJavaCompiler.newInstance();
 
 	public ElideDynamicEntityCompiler(String path) {
 		try {
-			System.out.println("Entity compiler constructor");
+			log.info("ElideDynamicEntityCompiler constructor");
 			ElideTableToPojo tablePojo = new ElideTableToPojo();
 			ElideTable table = tablePojo.parseTableConfigFile(path);
 			HandlebarsHydrator obj = new HandlebarsHydrator();
 			List<String> tableClassNames = obj.getTableClassNames(table);
 			
 			for (String className : tableClassNames) {
-				System.out.println("classname " + className);
 				classNames.add(PACKAGE_NAME + className);
+				
 			}
 			compiler.useParentClassLoader(
 					new InMemoryClassLoader(ClassLoader.getSystemClassLoader(), Sets.newHashSet(classNames)));
 
 		} catch (NullPointerException | IOException e) {
-			System.out.println("Unable to read Dynamic Configuration" + e.getMessage());
-			e.printStackTrace();
-			log.error("Unable to read Dynamic Configuration" + e.getMessage());
+			log.error("Unable to read Dynamic Configuration " + e.getMessage());
 		}
 
 	}
@@ -64,15 +62,13 @@ public class ElideDynamicEntityCompiler {
 			List<String> tablePojoStrings = obj.hydrateTableTemplate(table);
 
 			for (int i = 0; i < tableClassNames.size(); i++) {
-				System.out.println("tableClassNames.get(i)" + tableClassNames.get(i));
-				classPojoStringMap.put(tableClassNames.get(i), tablePojoStrings.get(i)); // is there a clearer way?
+				log.info("Table Class " + tableClassNames.get(i));
+				classPojoStringMap.put(tableClassNames.get(i), tablePojoStrings.get(i));
 			}
 
 			return classPojoStringMap;
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-			log.error(e.getMessage());
+			log.error("Unable to get Table Pojo "+e.getMessage());
 			return null;
 		}
 		
@@ -82,7 +78,7 @@ public class ElideDynamicEntityCompiler {
 	public void compile(String path) {
 
 		try {
-			System.out.println("EntityCompiler compile method" + path);
+			log.info("Dynamic Configuration Entity Compiler compile method" + path);
 			Map<String, String> tablePojoMap = getElideTable(path);
 			
 			for (Map.Entry<String, String> tablePojo : tablePojoMap.entrySet()) {
@@ -93,9 +89,8 @@ public class ElideDynamicEntityCompiler {
 			}
 			compiledObjects = compiler.compileAll();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 			e.printStackTrace();
-			log.error(e.getMessage());
+			log.error("Unable to compile dynamic classes"+e.getMessage());
 		}
 	}
 

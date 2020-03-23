@@ -5,55 +5,28 @@
  */
 package com.yahoo.elide.spring.config;
 
-import com.yahoo.elide.Elide;
-import com.yahoo.elide.core.DataStore;
-
-import com.yahoo.elide.datastores.jpa.JpaDataStore;
-import com.yahoo.elide.datastores.jpa.transaction.NonJtaTransaction;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
-import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.persistenceunit.PersistenceUnitManager;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Stream;
 
 /**
  * Dynamic Configuration For Elide Services. Override any of the beans (by
@@ -74,13 +47,11 @@ public class ElideDynamicConfiguration {
             DataSource source) throws IOException {
 
     	try {
-    		System.out.println("Elide Dynamic Config " + configProperties.getDynamicConfig().getPath());
+    		log.info("Elide Dynamic Config Path" + configProperties.getDynamicConfig().getPath());
 
         	ElideDynamicEntityCompiler compiler = new ElideDynamicEntityCompiler(configProperties.getDynamicConfig().getPath());
             
         	compiler.compile(configProperties.getDynamicConfig().getPath());
-
-        
 
 	        Collection<ClassLoader> classLoaders = new ArrayList<>();
 	        classLoaders.add(compiler.getClassLoader());
@@ -90,12 +61,10 @@ public class ElideDynamicConfiguration {
 	        Properties props = new Properties();
 	        props.putAll(properties);
 	
-	        ElideDynamicPersistenceUnit pui = new ElideDynamicPersistenceUnit("dynamicConfiguration", ElideDynamicEntityCompiler.classNames, props,
+	        ElideDynamicPersistenceUnit pui = new ElideDynamicPersistenceUnit("DynamicConfiguration", ElideDynamicEntityCompiler.classNames, props,
 	                compiler.getClassLoader());
 	        pui.setNonJtaDataSource(source);
 	        pui.setJtaDataSource(source);
-	
-	        //new HibernateJpaVendorAdapter();
 	
 	        LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
 	        bean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
@@ -115,8 +84,7 @@ public class ElideDynamicConfiguration {
 	
 	        return bean;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            log.error(e.getMessage());
+            log.error("Setting up Dynamic Configuration failed "+e.getMessage());
             return null;
         }
     }
