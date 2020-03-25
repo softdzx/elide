@@ -1,4 +1,4 @@
-package com.yahoo.elide.spring.config;
+package com.yahoo.elide.spring.dynamic.config;
 
 import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
@@ -17,11 +17,11 @@ import java.util.Set;
 @Slf4j
 @Data
 @AllArgsConstructor
-public class InMemoryClassLoader extends ClassLoader {
+public class ElideDynamicInMemoryClassLoader extends ClassLoader {
 	
     private Set<String> classNames = Sets.newHashSet();
     
-    public InMemoryClassLoader(ClassLoader parent, Set<String> classNames) {
+    public ElideDynamicInMemoryClassLoader(ClassLoader parent, Set<String> classNames) {
         super(parent);
         setClassNames(classNames);
     }
@@ -41,10 +41,10 @@ public class InMemoryClassLoader extends ClassLoader {
 
     @Override
     protected URL findResource(String name) {
-    	log.info("Finding Resource "+name +" in "+classNames);
+    	log.debug("Finding Resource "+name +" in "+classNames);
         if (classNames.contains(name.replace("/", ".").replace(".class", ""))) {
             try {
-            	log.info("Returning Resource "+"file://" + name);
+            	log.debug("Returning Resource "+"file://" + name);
                 return new URL("file://" + name);
             } catch (MalformedURLException e) {
                 throw new IllegalStateException(e);

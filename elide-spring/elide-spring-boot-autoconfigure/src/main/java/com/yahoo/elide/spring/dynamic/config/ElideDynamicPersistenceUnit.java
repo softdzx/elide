@@ -1,4 +1,4 @@
-package com.yahoo.elide.spring.config;
+package com.yahoo.elide.spring.dynamic.config;
 
 import lombok.Data;
 

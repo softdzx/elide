@@ -1,14 +1,12 @@
-package com.yahoo.elide.spring.config;
+package com.yahoo.elide.spring.dynamic.config;
 
 import com.google.common.collect.Sets;
 import com.yahoo.elide.contrib.dynamicconfighelpers.parser.ElideTableToPojo;
-import com.yahoo.elide.contrib.dynamicconfighelpers.parser.handlebars.HandlebarsHelper;
 import com.yahoo.elide.contrib.dynamicconfighelpers.parser.handlebars.HandlebarsHydrator;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.yahoo.elide.contrib.dynamicconfighelpers.model.ElideTable;
-import com.yahoo.elide.contrib.dynamicconfighelpers.model.Table;
 
 import org.mdkt.compiler.InMemoryJavaCompiler;
 
@@ -17,8 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 public class ElideDynamicEntityCompiler {
@@ -30,20 +26,21 @@ public class ElideDynamicEntityCompiler {
 
 	InMemoryJavaCompiler compiler = InMemoryJavaCompiler.newInstance();
 
+	HandlebarsHydrator hydrator = new HandlebarsHydrator();
+	
+	ElideTableToPojo tablePojo = new ElideTableToPojo();
+	
 	public ElideDynamicEntityCompiler(String path) {
 		try {
-			log.info("ElideDynamicEntityCompiler constructor");
-			ElideTableToPojo tablePojo = new ElideTableToPojo();
 			ElideTable table = tablePojo.parseTableConfigFile(path);
-			HandlebarsHydrator obj = new HandlebarsHydrator();
-			List<String> tableClassNames = obj.getTableClassNames(table);
+			List<String> tableClassNames = hydrator.getTableClassNames(table);
 			
 			for (String className : tableClassNames) {
 				classNames.add(PACKAGE_NAME + className);
 				
 			}
 			compiler.useParentClassLoader(
-					new InMemoryClassLoader(ClassLoader.getSystemClassLoader(), Sets.newHashSet(classNames)));
+					new ElideDynamicInMemoryClassLoader(ClassLoader.getSystemClassLoader(), Sets.newHashSet(classNames)));
 
 		} catch (NullPointerException | IOException e) {
 			log.error("Unable to read Dynamic Configuration " + e.getMessage());
@@ -51,18 +48,18 @@ public class ElideDynamicEntityCompiler {
 
 	}
 
-	public Map<String, String> getElideTable(String path) {
+	public Map<String, String> getTablePojoMap(String path) {
 
 		Map<String, String> classPojoStringMap = new HashMap<String, String>();
+		
 		try {
-			HandlebarsHydrator obj = new HandlebarsHydrator();
-			ElideTableToPojo tablePojo = new ElideTableToPojo();
+			
 			ElideTable table = tablePojo.parseTableConfigFile(path);
-			List<String> tableClassNames = obj.getTableClassNames(table);
-			List<String> tablePojoStrings = obj.hydrateTableTemplate(table);
+			List<String> tableClassNames = hydrator.getTableClassNames(table);
+			List<String> tablePojoStrings = hydrator.hydrateTableTemplate(table);
 
 			for (int i = 0; i < tableClassNames.size(); i++) {
-				log.info("Table Class " + tableClassNames.get(i));
+				log.debug("Table Class " + tableClassNames.get(i));
 				classPojoStringMap.put(tableClassNames.get(i), tablePojoStrings.get(i));
 			}
 
@@ -78,11 +75,10 @@ public class ElideDynamicEntityCompiler {
 	public void compile(String path) {
 
 		try {
-			log.info("Dynamic Configuration Entity Compiler compile method" + path);
-			Map<String, String> tablePojoMap = getElideTable(path);
+			Map<String, String> tablePojoMap = getTablePojoMap(path);
 			
 			for (Map.Entry<String, String> tablePojo : tablePojoMap.entrySet()) {
-				System.out.println("key: " + tablePojo.getKey() + ", value: " + tablePojo.getValue());
+				log.info("key: " + tablePojo.getKey() + ", value: " + tablePojo.getValue());
 				compiler.addSource(PACKAGE_NAME + tablePojo.getKey(),
 							tablePojo.getValue());
 				
