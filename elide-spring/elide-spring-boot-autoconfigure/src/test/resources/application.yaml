@@ -21,9 +21,10 @@ elide:
     queryCleanupDays: 7
     defaultAsyncQueryDAO: true
   dynamic-config:
-    path: https://git.ouroath.com/raw/aanandan/elide_config_schema/master/src/test/resources/table/valid_table.hjson?token=AAAG4ZQJS7PBWATHFQU7H226PX7QO
+    path: https://git.ouroath.com/raw/aanandan/elide_config_schema/master/src/test/resources/table/valid_table.hjson?token=AAAG4ZQ2GIQTG4DS42RBWLS6Q5AE2
     enabled: true
 spring:
+  
   jpa:
     show_sql: true
     properties:

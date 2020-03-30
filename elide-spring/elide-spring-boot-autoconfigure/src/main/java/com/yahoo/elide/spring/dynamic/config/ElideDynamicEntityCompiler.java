@@ -85,8 +85,7 @@ public class ElideDynamicEntityCompiler {
 			}
 			compiledObjects = compiler.compileAll();
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("Unable to compile dynamic classes"+e.getMessage());
+			log.error("Unable to compile dynamic classes");
 		}
 	}
 

@@ -249,7 +249,6 @@ public class ControllerTest extends IntegrationTest {
     @Test
     public void graphqlTestForbiddenCreate() {
         ArtifactGroup group = new ArtifactGroup();
-        group.setDeprecated(true);
         given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
