@@ -7,12 +7,11 @@ package com.yahoo.elide.spring.dynamic.config;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.catalina.Manager;
-import org.hibernate.MappingException;
-import org.hibernate.annotations.Parent;
 import org.hibernate.cfg.AvailableSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +19,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.persistenceunit.PersistenceUnitManager;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import java.lang.annotation.Annotation;
 import com.yahoo.elide.spring.config.ElideConfigProperties;
 import com.yahoo.elide.utils.ClassScanner;
 
@@ -51,35 +49,42 @@ public class ElideDynamicConfiguration {
 
     @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(EntityManagerFactoryBuilder builder,
-            DataSource source){
+            DataSource source, JpaProperties jpaProperties, HibernateProperties hibernateProperties){
 
     	try {
     		
-    		Map<String, Object> propertyMap = new HashMap<>();
+    		//Map for Persistent Unit properties
+    		Map<String, Object> puiPropertyMap = new HashMap<>();
     		
+    		//Bind entity classes from classpath
     		ArrayList<Class> bindClasses = new ArrayList<>();
             bindClasses.addAll(ClassScanner.getAnnotatedClasses(Entity.class));
             
-            for(int i=0; i < bindClasses.size(); i++){
-                System.out.println( bindClasses.get(i) );
-            }
+            //Map of JPA Properties
+            Map<String, String> jpaPropMap = jpaProperties.getProperties();
+            String hibernateGetDDLAuto = hibernateProperties.getDdlAuto();
             
+            if(jpaPropMap.get("hibernate.hbm2ddl.auto")==null && hibernateGetDDLAuto!=null){
+ 		      jpaPropMap.put("hibernate.hbm2ddl.auto",hibernateGetDDLAuto);
+ 		    }
             
         	ElideDynamicEntityCompiler compiler = new ElideDynamicEntityCompiler(configProperties.getDynamicConfig().getPath());  
         	compiler.compile(configProperties.getDynamicConfig().getPath());
-
-	        Collection<ClassLoader> classLoaders = new ArrayList<>();
+	        
+        	Collection<ClassLoader> classLoaders = new ArrayList<>();
 	        classLoaders.add(compiler.getClassLoader());
 	        
-	        propertyMap.put(AvailableSettings.CLASSLOADERS, classLoaders);
+	        //Add dynamic classes to Pui Map
+	        puiPropertyMap.put(AvailableSettings.CLASSLOADERS, classLoaders);
+	        //Add classpath entity model classes to Pui Map
+		    puiPropertyMap.put(AvailableSettings.LOADED_CLASSES, bindClasses); 
+
+		    //pui properties from pui map
+	        Properties puiProps = new Properties();
+	        puiProps.putAll(puiPropertyMap);
 	        
-	        propertyMap.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-	        propertyMap.put(AvailableSettings.LOADED_CLASSES, bindClasses);
-	        
-	        Properties props = new Properties();
-	        props.putAll(propertyMap);
-	
-	        ElideDynamicPersistenceUnit elideDynamicPersistenceUnit = new ElideDynamicPersistenceUnit("default", ElideDynamicEntityCompiler.classNames, props,
+	        //Create Elide dynamic Persistence Unit
+	        ElideDynamicPersistenceUnit elideDynamicPersistenceUnit = new ElideDynamicPersistenceUnit("default", ElideDynamicEntityCompiler.classNames, puiProps,
 	                compiler.getClassLoader());
 	        elideDynamicPersistenceUnit.setNonJtaDataSource(source);
 	        elideDynamicPersistenceUnit.setJtaDataSource(source);
@@ -88,10 +93,14 @@ public class ElideDynamicConfiguration {
 	        
 	        LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
 	        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-	         vendorAdapter.setGenerateDdl(true);
 	        bean.setJpaVendorAdapter(vendorAdapter);
 	        
-	        bean.setJpaPropertyMap(propertyMap);
+	        //Add JPA Properties from Application.yaml
+	        bean.setJpaPropertyMap(jpaPropMap);
+	        
+	        //Add Classes
+	        bean.setJpaPropertyMap(puiPropertyMap);
+	        
 	        bean.setPersistenceUnitManager(new PersistenceUnitManager() {
 	            @Override
 	            public PersistenceUnitInfo obtainDefaultPersistenceUnitInfo() throws IllegalStateException {
