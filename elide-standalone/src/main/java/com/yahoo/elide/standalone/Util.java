@@ -6,10 +6,15 @@
 package com.yahoo.elide.standalone;
 
 import com.yahoo.elide.async.models.AsyncQuery;
+import com.yahoo.elide.standalone.dynamic.config.ElideDynamicEntityCompiler;
 import com.yahoo.elide.utils.ClassScanner;
+
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -23,9 +28,9 @@ import javax.persistence.spi.PersistenceUnitInfo;
  * Util.
  */
 public class Util {
-
-    public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, boolean includeAsyncModel, 
-            Properties options) {
+	
+	public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, boolean includeAsyncModel, boolean includeDynamicModel,
+            String dynamicConfigPath, Properties options) {
 
         // Configure default options for example service
         if (options.isEmpty()) {
@@ -52,28 +57,41 @@ public class Util {
             options.put("javax.persistence.jdbc.user", "elide");
             options.put("javax.persistence.jdbc.password", "elide123");
         }
-
+        
+        ElideDynamicEntityCompiler dynamicEntityCompiler = new ElideDynamicEntityCompiler(dynamicConfigPath);
+        
+        if(includeDynamicModel) { 
+        	dynamicEntityCompiler.compile(); // errors out here... unable to compile
+        	Collection<ClassLoader> classLoaders = new ArrayList<>();
+            classLoaders.add(dynamicEntityCompiler.getClassLoader());
+            options.put(AvailableSettings.CLASSLOADERS, classLoaders);
+        }
+        
         PersistenceUnitInfo persistenceUnitInfo = new PersistenceUnitInfoImpl("elide-stand-alone",
-                combineModelEntities(modelPackageName, includeAsyncModel), options);
+                combineModelEntities(modelPackageName, includeAsyncModel, includeDynamicModel), options, dynamicEntityCompiler.getClassLoader());
 
         return new EntityManagerFactoryBuilderImpl(
-                new PersistenceUnitInfoDescriptor(persistenceUnitInfo), new HashMap<>())
+                new PersistenceUnitInfoDescriptor(persistenceUnitInfo), new HashMap<>(), dynamicEntityCompiler.getClassLoader())
                 .build();
     }
 
     /**
-     * Combine the model entities with Async model.
+     * Combine the model entities with Async  and Dynamic models.
      *
      * @param modelPackageName Package name
      * @param includeAsyncModel Include Async model package Name
+     * @param includeDynamicModel Include Dynamic model package Name
      * @return All entities combined from both package.
      */
-    public static List<String> combineModelEntities(String modelPackageName, boolean includeAsyncModel) {
+    public static List<String> combineModelEntities(String modelPackageName, boolean includeAsyncModel, boolean includeDynamicModel) {
 
         List<String> modelEntities = getAllEntities(modelPackageName);
 
         if (includeAsyncModel) {
             modelEntities.addAll(getAllEntities(AsyncQuery.class.getPackage().getName()));
+        }
+        if (includeDynamicModel) {
+            modelEntities.addAll(getAllEntities(ElideDynamicEntityCompiler.PACKAGE_NAME)); // double check this
         }
         return modelEntities;
     }

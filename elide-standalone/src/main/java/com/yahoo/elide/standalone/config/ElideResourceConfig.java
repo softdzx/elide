@@ -65,7 +65,7 @@ public class ElideResourceConfig extends ResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(Util.combineModelEntities(settings.getModelPackageName(), settings.enableAsync())).to(Set.class)
+                bind(Util.combineModelEntities(settings.getModelPackageName(), settings.enableAsync(), settings.enableDynamicModelConfig())).to(Set.class)
                         .named("elideAllModels");
             }
         });
@@ -116,7 +116,7 @@ public class ElideResourceConfig extends ResourceConfig {
                 if (!swaggerDocs.isEmpty()) {
                     // Include the async models in swagger docs
                     if(settings.enableAsync()) {
-                        EntityDictionary dictionary = new EntityDictionary(new HashMap());
+                        EntityDictionary dictionary = new EntityDictionary(new HashMap<>());
                         dictionary.bindEntity(AsyncQuery.class);
                         dictionary.bindEntity(AsyncQueryResult.class);
                          
