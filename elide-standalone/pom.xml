@@ -120,6 +120,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
+            <version>${version.mysql}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -161,6 +162,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -186,9 +188,8 @@
         <!-- Various Utility Libraries -->
         <dependency>
             <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId><!-- 
-            <version>1.18.12</version> -->
-            <optional>true</optional>
+            <artifactId>lombok</artifactId>
+            <version>1.18.12</version>
         </dependency>
         <dependency>
             <groupId>org.mdkt.compiler</groupId>
@@ -200,12 +201,14 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
 

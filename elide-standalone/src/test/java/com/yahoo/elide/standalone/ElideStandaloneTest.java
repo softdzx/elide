@@ -9,15 +9,20 @@ import static com.yahoo.elide.Elide.JSONAPI_CONTENT_TYPE;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.attr;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.attributes;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.datum;
+import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.data;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.id;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.resource;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.type;
 import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
 import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import javax.annotation.meta.When;
 
 import com.google.common.collect.Maps;
 import com.yahoo.elide.contrib.swagger.SwaggerBuilder;
@@ -28,16 +33,21 @@ import com.yahoo.elide.standalone.models.Post;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import io.swagger.models.Info;
 import io.swagger.models.Swagger;
+import lombok.Data;
 
 /**
  * Tests ElideStandalone starts and works
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(OrderAnnotation.class)
 public class ElideStandaloneTest {
     private ElideStandalone elide;
 
@@ -62,10 +72,10 @@ public class ElideStandaloneTest {
                 return options;
             }
 
-//             @Override
-//             public String getModelPackageName() {
-//             	return "com.yahoo.elide.contrib.dynamicconfig.model";
-//             }
+            @Override
+            public String getModelPackageName() {
+            	return "com.yahoo.elide.contrib.dynamicconfig.model";
+            }
 
             @Override
             public Map<String, Swagger> enableSwagger() {
@@ -102,6 +112,7 @@ public class ElideStandaloneTest {
     }
 
     @Test
+    @Order(1)
     public void testJsonAPIPost() {
         given()
             .contentType(JSONAPI_CONTENT_TYPE)
@@ -112,9 +123,9 @@ public class ElideStandaloneTest {
                         type("Player"),
                         id("ready-player-1"),
                         attributes( 
-                        	attr("name", "playar1"),
+                        	attr("name", "player1"),
                         	attr("countryCode", "USA"),
-                        	attr("playerCountry", "United States"),
+                        	attr("playerCountry", "USA"),
                         	attr("highScore", 100),
                             attr("createdOn", "2020-01-01")
                         )
@@ -126,32 +137,32 @@ public class ElideStandaloneTest {
             .statusCode(HttpStatus.SC_CREATED)
             .extract().body().asString();
     }
-
+    
 //    @Test
-//    public void testForbiddenJsonAPIPost() {
-//        given()
-//            .contentType(JSONAPI_CONTENT_TYPE)
-//            .accept(JSONAPI_CONTENT_TYPE)
-//            .body(
-//                datum(
-//                    resource(
-//                        type("post"),
-//                        id("2"),
-//                        attributes(
-//                            attr("content", "This is my first post. woot."),
-//                            attr("date", "2019-01-01T00:00Z"),
-//                            attr("abusiveContent", true)
+//    @Order(2)
+//    public void testJsonAPIGet() {
+//    	when()
+//        .get("/json/Player")
+//        .then()
+//        .body(equalTo(
+//        		data(
+//                        resource(
+//                                type("Player"),
+//                                id("ready-player-1"),
+//                                attributes(
+//                                        attr("countryCode", "USA"),
+//                                        attr("createdOn", "2020-01-01"),
+//                                        attr("highScore", 100),
+//                                        attr("playerCountry", "USA")
+//                                )
 //                        )
-//                    )
-//                )
-//            )
-//            .post("/api/v1/post")
-//            .then()
-//            .statusCode(HttpStatus.SC_FORBIDDEN)
-//            .extract().body().asString();
+//                ).toJSON())
+//        )
+//        .statusCode(HttpStatus.SC_OK);
 //    }
 
     @Test
+    @Order(4)
     public void testMetricsServlet() throws Exception {
         given()
                 .when()
@@ -162,6 +173,7 @@ public class ElideStandaloneTest {
     }
 
     @Test
+    @Order(5)
     public void testHealthCheckServlet() throws Exception {
             given()
                 .when()
@@ -171,6 +183,7 @@ public class ElideStandaloneTest {
     }
 
     @Test
+    @Order(6)
     public void testSwaggerEndpoint() throws Exception {
         given()
                 .when()

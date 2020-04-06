@@ -61,7 +61,7 @@ public class Util {
         ElideDynamicEntityCompiler dynamicEntityCompiler = new ElideDynamicEntityCompiler(dynamicConfigPath);
         
         if(includeDynamicModel) { 
-        	dynamicEntityCompiler.compile(); // errors out here... unable to compile
+        	dynamicEntityCompiler.compile();
         	Collection<ClassLoader> classLoaders = new ArrayList<>();
             classLoaders.add(dynamicEntityCompiler.getClassLoader());
             options.put(AvailableSettings.CLASSLOADERS, classLoaders);
@@ -91,7 +91,7 @@ public class Util {
             modelEntities.addAll(getAllEntities(AsyncQuery.class.getPackage().getName()));
         }
         if (includeDynamicModel) {
-            modelEntities.addAll(getAllEntities(ElideDynamicEntityCompiler.PACKAGE_NAME)); // double check this
+            modelEntities.addAll(getAllEntities("com.yahoo.elide.contrib.dynamicconfig.model")); // double check this
         }
         return modelEntities;
     }
