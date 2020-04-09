@@ -79,6 +79,16 @@ public class ElideStandaloneTest {
                 docs.put("test", swagger);
                 return docs;
             }
+            
+            @Override
+            public boolean enableDynamicModelConfig() {
+            	return true;
+            }
+            
+            @Override
+            public String getDynamicConfigPath() {
+            	return "/Users/amakwana/workspace/elide-dynamic-config/elide/elide-standalone/src/test/resources/models/";
+            }
 
         });
         elide.start(false);
@@ -88,6 +98,32 @@ public class ElideStandaloneTest {
     public void shutdown() throws Exception {
         elide.stop();
     }
+    
+    @Test
+    public void testJsonAPIPlayer() {
+        given()
+        .contentType(JSONAPI_CONTENT_TYPE)
+        .accept(JSONAPI_CONTENT_TYPE)
+        .body(
+            datum(
+                resource(
+                    type("player"),
+                    id("ready-player-1"),
+                    attributes( 
+                    	attr("name", "player1"),
+                    	attr("countryCode", "USA"),
+                    	attr("playerCountry", "USA"),
+                    	attr("highScore", 100)
+//                        attr("createdOn", "2020-01-01")
+                    )
+                )
+            )
+        )
+        .post("/api/v1/player")
+        .then()
+        .statusCode(HttpStatus.SC_CREATED)
+        .extract().body().asString();
+}
 
     @Test
     public void testJsonAPIPost() {

@@ -6,10 +6,17 @@
 package com.yahoo.elide.standalone;
 
 import com.yahoo.elide.async.models.AsyncQuery;
+import com.yahoo.elide.datastores.aggregation.queryengines.sql.annotation.FromSubquery;
+import com.yahoo.elide.datastores.aggregation.queryengines.sql.annotation.FromTable;
+import com.yahoo.elide.standalone.dynamic.config.ElideDynamicEntityCompiler;
 import com.yahoo.elide.utils.ClassScanner;
+
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -23,9 +30,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
  * Util.
  */
 public class Util {
-
-    public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, boolean includeAsyncModel, 
-            Properties options) {
+	
+	private static ElideDynamicEntityCompiler dynamicEntityCompiler;
+	
+    public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, boolean includeAsyncModel, boolean includeDynamicModel,
+			String dynamicConfigPath, Properties options) {
 
         // Configure default options for example service
         if (options.isEmpty()) {
@@ -53,30 +62,68 @@ public class Util {
             options.put("javax.persistence.jdbc.password", "elide123");
         }
 
-        PersistenceUnitInfo persistenceUnitInfo = new PersistenceUnitInfoImpl("elide-stand-alone",
-                combineModelEntities(modelPackageName, includeAsyncModel), options);
+        dynamicEntityCompiler = new ElideDynamicEntityCompiler(dynamicConfigPath);
+		if(includeDynamicModel) { 
+			dynamicEntityCompiler.compile();
+			Collection<ClassLoader> classLoaders = new ArrayList<>();
+			classLoaders.add(dynamicEntityCompiler.getClassLoader());
+			options.put(AvailableSettings.CLASSLOADERS, classLoaders);
+			
+			//Bind entity classes from classpath to Persistence Unit
+			List<Class> bindClasses = new ArrayList<>();
+            bindClasses.addAll(ClassScanner.getAnnotatedClasses(Entity.class));
 
-        return new EntityManagerFactoryBuilderImpl(
-                new PersistenceUnitInfoDescriptor(persistenceUnitInfo), new HashMap<>())
-                .build();
+            //Bind FromTable/FromSubSelect classes from classpath to Persistence Unit
+            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromTable.class));
+            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromSubquery.class));
+            dynamicEntityCompiler.bindClasses = bindClasses;
+            
+		}
+		PersistenceUnitInfo persistenceUnitInfo = null;
+		try {
+			
+			//Bind entity classes from classpath to Persistence Unit
+            ArrayList<Class> bindClasses = new ArrayList<>();
+            bindClasses.addAll(ClassScanner.getAnnotatedClasses(Entity.class));
+
+            //Bind FromTable/FromSubSelect classes from classpath to Persistence Unit
+            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromTable.class));
+            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromSubquery.class));
+            options.put(AvailableSettings.LOADED_CLASSES, bindClasses);
+
+            persistenceUnitInfo = new PersistenceUnitInfoImpl("elide-stand-alone", 
+            		combineModelEntities(dynamicEntityCompiler, modelPackageName, includeAsyncModel, includeDynamicModel), 
+            		options, 
+            		dynamicEntityCompiler.getClassLoader());
+            
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new EntityManagerFactoryBuilderImpl(
+				new PersistenceUnitInfoDescriptor(persistenceUnitInfo), new HashMap<>(), dynamicEntityCompiler.getClassLoader())
+				.build();
     }
 
-    /**
-     * Combine the model entities with Async model.
-     *
-     * @param modelPackageName Package name
-     * @param includeAsyncModel Include Async model package Name
-     * @return All entities combined from both package.
-     */
-    public static List<String> combineModelEntities(String modelPackageName, boolean includeAsyncModel) {
-
-        List<String> modelEntities = getAllEntities(modelPackageName);
-
-        if (includeAsyncModel) {
-            modelEntities.addAll(getAllEntities(AsyncQuery.class.getPackage().getName()));
-        }
-        return modelEntities;
-    }
+	/**
+	 * Combine the model entities with Async  and Dynamic models.
+	 *
+	 * @param modelPackageName Package name
+	 * @param includeAsyncModel Include Async model package Name
+	 * @param includeDynamicModel Include Dynamic model package Name
+	 * @return All entities combined from both package.
+	 * @throws ClassNotFoundException 
+	 */
+	public static List<String> combineModelEntities(ElideDynamicEntityCompiler compiler, String modelPackageName, boolean includeAsyncModel, boolean includeDynamicModel) throws ClassNotFoundException {
+		List<String> modelEntities = getAllEntities(modelPackageName);
+		if (includeAsyncModel) {
+			modelEntities.addAll(getAllEntities(AsyncQuery.class.getPackage().getName()));
+		}
+		if (includeDynamicModel) {
+			modelEntities.addAll(findAnnotatedClasses(compiler, Entity.class));
+		}
+		return modelEntities;
+	}
 
     /**
      * Get all the entities in a package.
@@ -89,4 +136,24 @@ public class Util {
                 .map(Class::getName)
                 .collect(Collectors.toList());
     }
+
+	/**
+	 * Find classes with a particular annotation from dynamic compiler.
+	 * @param compiler An instance of ElideDynamicEntityCompiler.
+	 * @param annotationClass Annotation to search for.
+	 * @return Set of Classes matching the annotation.
+	 * @throws ClassNotFoundException
+	 */
+	public static List<String> findAnnotatedClasses(ElideDynamicEntityCompiler compiler, Class annotationClass)
+			throws ClassNotFoundException {
+		List<String> annotatedClass = new ArrayList<String>();
+		List<String> dynamicClasses = compiler.classNames;
+		for (String dynamicClass : dynamicClasses) {
+			Class<?> classz = compiler.getClassLoader().loadClass(dynamicClass);
+			if (classz.getAnnotation(annotationClass) != null) {
+				annotatedClass.add(classz.getName());
+			}
+		}
+		return annotatedClass;
+	}
 }

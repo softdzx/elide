@@ -10,6 +10,7 @@ import com.yahoo.elide.ElideSettings;
 import com.yahoo.elide.core.DataStore;
 import com.yahoo.elide.core.EntityDictionary;
 import com.yahoo.elide.standalone.Util;
+import com.yahoo.elide.standalone.dynamic.config.ElideDynamicEntityCompiler;
 import com.yahoo.elide.async.models.AsyncQuery;
 import com.yahoo.elide.async.models.AsyncQueryResult;
 import com.yahoo.elide.async.service.AsyncExecutorService;
@@ -49,6 +50,7 @@ public class ElideResourceConfig extends ResourceConfig {
 
     private static MetricRegistry metricRegistry = null;
     private static HealthCheckRegistry healthCheckRegistry = null;
+    private static ElideDynamicEntityCompiler dynamicEntityCompiler;
 
     /**
      * Constructor
@@ -60,13 +62,23 @@ public class ElideResourceConfig extends ResourceConfig {
         this.injector = injector;
 
         settings = (ElideStandaloneSettings) servletContext.getAttribute(ELIDE_STANDALONE_SETTINGS_ATTR);
+        
+        dynamicEntityCompiler = new ElideDynamicEntityCompiler(settings.getDynamicConfigPath());
+    	if(settings.enableDynamicModelConfig()) { 
+			dynamicEntityCompiler.compile();
+		}
 
         // Bind things that should be injectable to the Settings class
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(Util.combineModelEntities(settings.getModelPackageName(), settings.enableAsync())).to(Set.class)
-                        .named("elideAllModels");
+            	try {
+					bind(Util.combineModelEntities(dynamicEntityCompiler, settings.getModelPackageName(), 
+							settings.enableAsync(), settings.enableDynamicModelConfig())).to(Set.class).named("elideAllModels");
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+					log.debug("error in resource config"+e.getMessage());
+				}
             }
         });
 
@@ -130,6 +142,23 @@ public class ElideResourceConfig extends ResourceConfig {
                         Swagger swagger = builder.build().basePath(asyncBasePath);
 
                         swaggerDocs.put("async", swagger);
+                    }
+                    // bind dynamic models
+                    if(settings.enableDynamicModelConfig()) {
+                    	EntityDictionary dictionary = new EntityDictionary(new HashMap());
+                        for(Class entity : dynamicEntityCompiler.getBindClasses()) {
+                        	dictionary.bindEntity(entity);
+                        }
+                        
+                        Info info = new Info().title("Dynamic models Service").version("1.0");
+                        SwaggerBuilder builder = new SwaggerBuilder(dictionary, info);
+                        
+                        //Default value of getJsonApiPathSpec() ends with /* at the end. need to remove.
+                        String dynamicBasePath = settings.getJsonApiPathSpec().replaceAll("/\\*", "");
+
+                        Swagger swagger = builder.build().basePath(dynamicBasePath);
+
+                        swaggerDocs.put("dynamic model", swagger);
                     }
 
                     bind(swaggerDocs).named("swagger").to(new TypeLiteral<Map<String, Swagger>>() { });

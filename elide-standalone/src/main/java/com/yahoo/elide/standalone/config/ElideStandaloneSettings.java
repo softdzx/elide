@@ -63,7 +63,7 @@ public interface ElideStandaloneSettings {
      */
     default ElideSettings getElideSettings(ServiceLocator injector) {
         EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageName(),
-                enableAsync(), getDatabaseProperties());
+                enableAsync(), enableDynamicModelConfig(), getDynamicConfigPath(), getDatabaseProperties());
         DataStore dataStore = new JpaDataStore(
                 () -> { return entityManagerFactory.createEntityManager(); },
                 (em -> { return new NonJtaTransaction(em); }));
@@ -167,6 +167,23 @@ public interface ElideStandaloneSettings {
      */
     default boolean enableGraphQL() {
         return true;
+    }
+    
+    /**
+     * Enable the support for Dynamic Model Configuration. If false, the feature will be disabled.
+     *
+     * @return Default: False
+     */
+    default boolean enableDynamicModelConfig() {
+        return false;
+    }
+
+    /**
+     * Base path to Hjson dynamic model configurations
+     * @return Default: /models/
+     */
+    default String getDynamicConfigPath() {
+        return "/models/";
     }
     
     /**
