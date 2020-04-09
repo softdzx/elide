@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ElideDynamicEntityCompiler {
 	
 	public static List<String> classNames = new ArrayList<String>();
-	public static List<Class> bindClasses;
+	public static Set<Class> bindClasses;
 
     public static final String PACKAGE_NAME = "com.yahoo.elide.contrib.dynamicconfig.model.";
     private Map<String, Class<?>> compiledObjects;
@@ -95,7 +96,7 @@ public class ElideDynamicEntityCompiler {
 		return compiledObjects.get(name);
 	}
 	
-	public List<Class> getBindClasses() {
+	public Set<Class> getBindClasses() {
 		return bindClasses;
 	}
 }

@@ -18,8 +18,10 @@ import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.Entity;
@@ -68,28 +70,19 @@ public class Util {
 			Collection<ClassLoader> classLoaders = new ArrayList<>();
 			classLoaders.add(dynamicEntityCompiler.getClassLoader());
 			options.put(AvailableSettings.CLASSLOADERS, classLoaders);
-			
-			//Bind entity classes from classpath to Persistence Unit
-			List<Class> bindClasses = new ArrayList<>();
-            bindClasses.addAll(ClassScanner.getAnnotatedClasses(Entity.class));
-
-            //Bind FromTable/FromSubSelect classes from classpath to Persistence Unit
-            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromTable.class));
-            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromSubquery.class));
-            dynamicEntityCompiler.bindClasses = bindClasses;
-            
 		}
 		PersistenceUnitInfo persistenceUnitInfo = null;
 		try {
 			
-			//Bind entity classes from classpath to Persistence Unit
-            ArrayList<Class> bindClasses = new ArrayList<>();
-            bindClasses.addAll(ClassScanner.getAnnotatedClasses(Entity.class));
-
-            //Bind FromTable/FromSubSelect classes from classpath to Persistence Unit
-            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromTable.class));
-            bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromSubquery.class));
-            options.put(AvailableSettings.LOADED_CLASSES, bindClasses);
+			ElideDynamicEntityCompiler.bindClasses = new HashSet<>();
+			// add dynamic generated classes
+			ElideDynamicEntityCompiler.bindClasses.addAll(populateBindClasses(dynamicEntityCompiler, Entity.class));
+			ElideDynamicEntityCompiler.bindClasses.addAll(populateBindClasses(dynamicEntityCompiler, FromTable.class));
+			ElideDynamicEntityCompiler.bindClasses.addAll(populateBindClasses(dynamicEntityCompiler, FromSubquery.class));
+			// add classes
+			ElideDynamicEntityCompiler.bindClasses.addAll(ClassScanner.getAnnotatedClasses(Entity.class));
+            ElideDynamicEntityCompiler.bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromTable.class));
+			ElideDynamicEntityCompiler.bindClasses.addAll(ClassScanner.getAnnotatedClasses(FromSubquery.class));
 
             persistenceUnitInfo = new PersistenceUnitInfoImpl("elide-stand-alone", 
             		combineModelEntities(dynamicEntityCompiler, modelPackageName, includeAsyncModel, includeDynamicModel), 
@@ -155,5 +148,17 @@ public class Util {
 			}
 		}
 		return annotatedClass;
+	}
+	
+	public static Set<Class> populateBindClasses(ElideDynamicEntityCompiler compiler, Class annotationClass) throws ClassNotFoundException {
+		Set<Class> bindClasses = new HashSet<>();
+		List<String> dynamicClasses = compiler.classNames;
+		for (String dynamicClass : dynamicClasses) {
+			Class<?> bindClass = compiler.getClassLoader().loadClass(dynamicClass).getClass();
+			if (bindClass.getAnnotation(annotationClass) != null) {
+				bindClasses.add(bindClass);
+			}
+		}
+		return bindClasses;
 	}
 }
