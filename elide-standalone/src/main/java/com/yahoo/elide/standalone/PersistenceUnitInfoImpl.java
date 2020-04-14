@@ -25,7 +25,8 @@ import javax.sql.DataSource;
 @Data
 public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
-    public PersistenceUnitInfoImpl(String persistenceUnitName, List<String> managedClassNames, Properties properties, ClassLoader loader) {
+    public PersistenceUnitInfoImpl(String persistenceUnitName, List<String> managedClassNames,
+            Properties properties, ClassLoader loader) {
         this.persistenceUnitName = persistenceUnitName;
         this.managedClassNames = managedClassNames;
         this.properties = properties;

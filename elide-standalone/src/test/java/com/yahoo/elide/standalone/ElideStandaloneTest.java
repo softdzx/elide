@@ -5,35 +5,38 @@
  */
 package com.yahoo.elide.standalone;
 
+import static com.yahoo.elide.Elide.JSONAPI_CONTENT_TYPE;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.attr;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.attributes;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.datum;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.id;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.resource;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.type;
-import static com.yahoo.elide.Elide.JSONAPI_CONTENT_TYPE;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasKey;
 
-import com.google.common.collect.Maps;
 import com.yahoo.elide.contrib.swagger.SwaggerBuilder;
 import com.yahoo.elide.core.EntityDictionary;
 import com.yahoo.elide.standalone.config.ElideStandaloneSettings;
 import com.yahoo.elide.standalone.models.Post;
-import io.swagger.models.Info;
-import io.swagger.models.Swagger;
+
+import com.google.common.collect.Maps;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import io.swagger.models.Info;
+import io.swagger.models.Swagger;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+
 /**
- * Tests ElideStandalone starts and works
+ * Tests ElideStandalone starts and works.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ElideStandaloneTest {
@@ -79,15 +82,15 @@ public class ElideStandaloneTest {
                 docs.put("test", swagger);
                 return docs;
             }
-            
+
             @Override
             public boolean enableDynamicModelConfig() {
-            	return true;
+                return true;
             }
-            
+
             @Override
             public String getDynamicConfigPath() {
-            	return "/Users/amakwana/workspace/elide-dynamic-config/elide/elide-standalone/src/test/resources/models/";
+                return "/Users/amakwana/workspace/elide-dynamic-config/elide/elide-standalone/src/test/resources/models/";
             }
 
         });
@@ -98,106 +101,105 @@ public class ElideStandaloneTest {
     public void shutdown() throws Exception {
         elide.stop();
     }
-    
+
     @Test
     public void testJsonAPIPlayer() {
         given()
         .contentType(JSONAPI_CONTENT_TYPE)
         .accept(JSONAPI_CONTENT_TYPE)
         .body(
-            datum(
-                resource(
-                    type("player"),
-                    id("ready-player-1"),
-                    attributes( 
-                    	attr("name", "player1"),
-                    	attr("countryCode", "USA"),
-                    	attr("playerCountry", "USA"),
-                    	attr("highScore", 100)
-//                        attr("createdOn", "2020-01-01")
-                    )
+                datum(
+                        resource(
+                                type("player"),
+                                id("ready-player-1"),
+                                attributes(
+                                        attr("name", "player1"),
+                                        attr("countryCode", "USA"),
+                                        attr("playerCountry", "USA"),
+                                        attr("highScore", 100)
+                                        //                        attr("createdOn", "2020-01-01"); still need to be tested with date
+                                        )
+                                )
+                        )
                 )
-            )
-        )
         .post("/api/v1/player")
         .then()
         .statusCode(HttpStatus.SC_CREATED)
         .extract().body().asString();
-}
+    }
 
     @Test
     public void testJsonAPIPost() {
         given()
-            .contentType(JSONAPI_CONTENT_TYPE)
-            .accept(JSONAPI_CONTENT_TYPE)
-            .body(
+        .contentType(JSONAPI_CONTENT_TYPE)
+        .accept(JSONAPI_CONTENT_TYPE)
+        .body(
                 datum(
-                    resource(
-                        type("post"),
-                        id("1"),
-                        attributes(
-                            attr("content", "This is my first post. woot."),
-                            attr("date", "2019-01-01T00:00Z")
+                        resource(
+                                type("post"),
+                                id("1"),
+                                attributes(
+                                        attr("content", "This is my first post. woot."),
+                                        attr("date", "2019-01-01T00:00Z")
+                                        )
+                                )
                         )
-                    )
                 )
-            )
-            .post("/api/v1/post")
-            .then()
-            .statusCode(HttpStatus.SC_CREATED)
-            .extract().body().asString();
+        .post("/api/v1/post")
+        .then()
+        .statusCode(HttpStatus.SC_CREATED)
+        .extract().body().asString();
     }
 
     @Test
     public void testForbiddenJsonAPIPost() {
         given()
-            .contentType(JSONAPI_CONTENT_TYPE)
-            .accept(JSONAPI_CONTENT_TYPE)
-            .body(
+        .contentType(JSONAPI_CONTENT_TYPE)
+        .accept(JSONAPI_CONTENT_TYPE)
+        .body(
                 datum(
-                    resource(
-                        type("post"),
-                        id("2"),
-                        attributes(
-                            attr("content", "This is my first post. woot."),
-                            attr("date", "2019-01-01T00:00Z"),
-                            attr("abusiveContent", true)
+                        resource(
+                                type("post"),
+                                id("2"),
+                                attributes(
+                                        attr("content", "This is my first post. woot."),
+                                        attr("date", "2019-01-01T00:00Z"),
+                                        attr("abusiveContent", true)
+                                        )
+                                )
                         )
-                    )
                 )
-            )
-            .post("/api/v1/post")
-            .then()
-            .statusCode(HttpStatus.SC_FORBIDDEN)
-            .extract().body().asString();
+        .post("/api/v1/post")
+        .then()
+        .statusCode(HttpStatus.SC_FORBIDDEN)
+        .extract().body().asString();
     }
 
     @Test
     public void testMetricsServlet() throws Exception {
         given()
-                .when()
-                .get("/stats/metrics")
-                .then()
-                .statusCode(200)
-                .body("meters", hasKey("com.codahale.metrics.servlet.InstrumentedFilter.responseCodes.ok"));
+        .when()
+        .get("/stats/metrics")
+        .then()
+        .statusCode(200)
+        .body("meters", hasKey("com.codahale.metrics.servlet.InstrumentedFilter.responseCodes.ok"));
     }
 
     @Test
     public void testHealthCheckServlet() throws Exception {
-            given()
-                .when()
-                .get("/stats/healthcheck")
-                .then()
-                .statusCode(501); //Returns 'Not Implemented' if there are no Health Checks Registered
+        given()
+        .when()
+        .get("/stats/healthcheck")
+        .then()
+        .statusCode(501); //Returns 'Not Implemented' if there are no Health Checks Registered
     }
 
     @Test
     public void testSwaggerEndpoint() throws Exception {
         given()
-                .when()
-                .get("/swagger/doc/test")
-                .then()
-                .statusCode(200);
+        .when()
+        .get("/swagger/doc/test")
+        .then()
+        .statusCode(200);
     }
 }
-

@@ -9,6 +9,7 @@ import com.yahoo.elide.ElideSettings;
 import com.yahoo.elide.ElideSettingsBuilder;
 
 import com.yahoo.elide.Injector;
+import com.yahoo.elide.async.service.AsyncQueryDAO;
 import com.yahoo.elide.audit.AuditLogger;
 import com.yahoo.elide.audit.Slf4jLogger;
 import com.yahoo.elide.core.DataStore;
@@ -18,7 +19,6 @@ import com.yahoo.elide.datastores.jpa.JpaDataStore;
 import com.yahoo.elide.datastores.jpa.transaction.NonJtaTransaction;
 import com.yahoo.elide.security.checks.Check;
 import com.yahoo.elide.standalone.Util;
-import com.yahoo.elide.async.service.AsyncQueryDAO;
 
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -122,8 +122,8 @@ public interface ElideStandaloneSettings {
     }
 
     /**
-     * API root path specification for JSON-API. Namely, this is the mount point of your API. By default it will look
-     * something like:
+     * API root path specification for JSON-API. Namely, this is the mount point of your API.
+     * By default it will look something like:
      *   <strong>yourcompany.com/api/v1/YOUR_ENTITY</strong>
      *
      * @return Default: /api/v1/*
@@ -168,7 +168,7 @@ public interface ElideStandaloneSettings {
     default boolean enableGraphQL() {
         return true;
     }
-    
+
     /**
      * Enable the support for Dynamic Model Configuration. If false, the feature will be disabled.
      *
@@ -179,13 +179,13 @@ public interface ElideStandaloneSettings {
     }
 
     /**
-     * Base path to Hjson dynamic model configurations
+     * Base path to Hjson dynamic model configurations.
      * @return Default: /models/
      */
     default String getDynamicConfigPath() {
         return "/models/";
     }
-    
+
     /**
      * Enable the support for Async querying feature. If false, the async feature will be disabled.
      *
@@ -242,16 +242,16 @@ public interface ElideStandaloneSettings {
 
     /**
      * Whether Dates should be ISO8601 strings (true) or epochs (false).
-     * @return
+     * @return whether ISO8601Dates are enabled.
      */
     default boolean enableISO8601Dates() {
         return true;
     }
 
     /**
-     * Whether or not Codahale metrics, healthchecks, thread, ping, and admin servlet
+     * Whether or not Codahale metrics, healthchecks, thread, ping, and admin servlet.
      * should be enabled.
-     * @return
+     * @return whether ServiceMonitoring is enabled.
      */
     default boolean enableServiceMonitoring() {
         return true;
@@ -287,7 +287,7 @@ public interface ElideStandaloneSettings {
     }
 
     /**
-     * Gets properties to configure the database
+     * Gets properties to configure the database.
      *
      * @return Default: ./settings/hibernate.cfg.xml
      */
@@ -305,7 +305,7 @@ public interface ElideStandaloneSettings {
     }
 
     /**
-     * Gets the audit logger for elide
+     * Gets the audit logger for elide.
      *
      * @return Default: Slf4jLogger
      */

@@ -7,17 +7,18 @@ package com.yahoo.elide.standalone.config;
 
 import com.yahoo.elide.Elide;
 import com.yahoo.elide.ElideSettings;
+import com.yahoo.elide.async.models.AsyncQuery;
+import com.yahoo.elide.async.models.AsyncQueryResult;
+import com.yahoo.elide.async.service.AsyncCleanerService;
+import com.yahoo.elide.async.service.AsyncExecutorService;
+import com.yahoo.elide.async.service.AsyncQueryDAO;
+import com.yahoo.elide.async.service.DefaultAsyncQueryDAO;
+import com.yahoo.elide.contrib.swagger.SwaggerBuilder;
 import com.yahoo.elide.core.DataStore;
 import com.yahoo.elide.core.EntityDictionary;
 import com.yahoo.elide.standalone.Util;
 import com.yahoo.elide.standalone.dynamic.config.ElideDynamicEntityCompiler;
-import com.yahoo.elide.async.models.AsyncQuery;
-import com.yahoo.elide.async.models.AsyncQueryResult;
-import com.yahoo.elide.async.service.AsyncExecutorService;
-import com.yahoo.elide.async.service.AsyncCleanerService;
-import com.yahoo.elide.async.service.AsyncQueryDAO;
-import com.yahoo.elide.async.service.DefaultAsyncQueryDAO;
-import com.yahoo.elide.contrib.swagger.SwaggerBuilder;
+
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -53,32 +54,33 @@ public class ElideResourceConfig extends ResourceConfig {
     private static ElideDynamicEntityCompiler dynamicEntityCompiler;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param injector Injection instance for application
+     * @param injector Injection instance for application.
      */
     @Inject
     public ElideResourceConfig(ServiceLocator injector, @Context ServletContext servletContext) {
         this.injector = injector;
 
         settings = (ElideStandaloneSettings) servletContext.getAttribute(ELIDE_STANDALONE_SETTINGS_ATTR);
-        
+
         dynamicEntityCompiler = new ElideDynamicEntityCompiler(settings.getDynamicConfigPath());
-    	if(settings.enableDynamicModelConfig()) { 
-			dynamicEntityCompiler.compile();
-		}
+        if (settings.enableDynamicModelConfig()) {
+            dynamicEntityCompiler.compile();
+        }
 
         // Bind things that should be injectable to the Settings class
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-            	try {
-					bind(Util.combineModelEntities(dynamicEntityCompiler, settings.getModelPackageName(), 
-							settings.enableAsync(), settings.enableDynamicModelConfig())).to(Set.class).named("elideAllModels");
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-					log.debug("error in resource config"+e.getMessage());
-				}
+                try {
+                    bind(Util.combineModelEntities(dynamicEntityCompiler,
+                            settings.getModelPackageName(), settings.enableAsync(),
+                            settings.enableDynamicModelConfig())).to(Set.class).named("elideAllModels");
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                    log.debug("error in resource config" + e.getMessage());
+                }
             }
         });
 
@@ -99,9 +101,9 @@ public class ElideResourceConfig extends ResourceConfig {
                 bind(elideSettings.getDataStore()).to(DataStore.class).named("elideDataStore");
 
                 // Binding async service
-                if(settings.enableAsync()) {
+                if (settings.enableAsync()) {
                     AsyncQueryDAO asyncQueryDao = settings.getAsyncQueryDAO();
-                    if(asyncQueryDao == null) {
+                    if (asyncQueryDao == null) {
                         asyncQueryDao = new DefaultAsyncQueryDAO(elide, elide.getDataStore());
                     }
                     bind(asyncQueryDao).to(AsyncQueryDAO.class);
@@ -111,7 +113,7 @@ public class ElideResourceConfig extends ResourceConfig {
                     bind(AsyncExecutorService.getInstance()).to(AsyncExecutorService.class);
 
                     // Binding async cleanup service
-                    if(settings.enableAsyncCleanup()) {
+                    if (settings.enableAsyncCleanup()) {
                         AsyncCleanerService.init(elide, settings.getAsyncMaxRunTimeMinutes(),
                                 settings.getAsyncQueryCleanupDays(), asyncQueryDao);
                         bind(AsyncCleanerService.getInstance()).to(AsyncCleanerService.class);
@@ -122,20 +124,21 @@ public class ElideResourceConfig extends ResourceConfig {
 
         // Bind swaggers to given endpoint
         register(new org.glassfish.hk2.utilities.binding.AbstractBinder() {
+            @SuppressWarnings("rawtypes")
             @Override
             protected void configure() {
                 Map<String, Swagger> swaggerDocs = settings.enableSwagger();
                 if (!swaggerDocs.isEmpty()) {
                     // Include the async models in swagger docs
-                    if(settings.enableAsync()) {
-                        EntityDictionary dictionary = new EntityDictionary(new HashMap());
+                    if (settings.enableAsync()) {
+                        EntityDictionary dictionary = new EntityDictionary(new HashMap<>());
                         dictionary.bindEntity(AsyncQuery.class);
                         dictionary.bindEntity(AsyncQueryResult.class);
-                         
+
                         Info info = new Info().title("Async Service").version("1.0");
 
                         SwaggerBuilder builder = new SwaggerBuilder(dictionary, info);
-                        
+
                         //Default value of getJsonApiPathSpec() ends with /* at the end. need to remove.
                         String asyncBasePath = settings.getJsonApiPathSpec().replaceAll("/\\*", "");
 
@@ -144,15 +147,15 @@ public class ElideResourceConfig extends ResourceConfig {
                         swaggerDocs.put("async", swagger);
                     }
                     // bind dynamic models
-                    if(settings.enableDynamicModelConfig()) {
-                    	EntityDictionary dictionary = new EntityDictionary(new HashMap());
-                        for(Class entity : dynamicEntityCompiler.getBindClasses()) {
-                        	dictionary.bindEntity(entity);
+                    if (settings.enableDynamicModelConfig()) {
+                        EntityDictionary dictionary = new EntityDictionary(new HashMap<>());
+                        for (Class entity : dynamicEntityCompiler.getBindClasses()) {
+                            dictionary.bindEntity(entity);
                         }
-                        
+
                         Info info = new Info().title("Dynamic models Service").version("1.0");
                         SwaggerBuilder builder = new SwaggerBuilder(dictionary, info);
-                        
+
                         //Default value of getJsonApiPathSpec() ends with /* at the end. need to remove.
                         String dynamicBasePath = settings.getJsonApiPathSpec().replaceAll("/\\*", "");
 
@@ -172,7 +175,7 @@ public class ElideResourceConfig extends ResourceConfig {
     }
 
     /**
-     * Init the supplemental resource config
+     * Init the supplemental resource config.
      */
     private void additionalConfiguration(Consumer<ResourceConfig> configurator) {
         // Inject into consumer if class is provided

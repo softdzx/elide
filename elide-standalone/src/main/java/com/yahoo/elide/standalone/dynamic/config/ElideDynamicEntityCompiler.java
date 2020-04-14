@@ -1,13 +1,19 @@
+/*
+ * Copyright 2020, Yahoo Inc.
+ * Licensed under the Apache License, Version 2.0
+ * See LICENSE file in project root for terms.
+ */
 package com.yahoo.elide.standalone.dynamic.config;
 
-import com.google.common.collect.Sets;
 import com.yahoo.elide.contrib.dynamicconfighelpers.model.ElideSecurityConfig;
 import com.yahoo.elide.contrib.dynamicconfighelpers.model.ElideTableConfig;
 import com.yahoo.elide.contrib.dynamicconfighelpers.parser.ElideConfigParser;
 import com.yahoo.elide.contrib.dynamicconfighelpers.parser.handlebars.HandlebarsHydrator;
 
-import org.mdkt.compiler.CompilationException;
+import com.google.common.collect.Sets;
 import org.mdkt.compiler.InMemoryJavaCompiler;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,13 +22,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import lombok.extern.slf4j.Slf4j;
-
+/**
+ * Elide Dynamic entity compiler.
+ */
 @Slf4j
 public class ElideDynamicEntityCompiler {
-	
-	public static List<String> classNames = new ArrayList<String>();
-	public static Set<Class> bindClasses;
+
+    public static List<String> classNames = new ArrayList<String>();
+
+    @SuppressWarnings("rawtypes")
+    public static Set<Class> bindClasses;
 
     public static final String PACKAGE_NAME = "com.yahoo.elide.contrib.dynamicconfig.model.";
     private Map<String, Class<?>> compiledObjects;
@@ -36,14 +45,14 @@ public class ElideDynamicEntityCompiler {
 
     Map<String, String> tableClasses = new HashMap<String, String>();
     Map<String, String> securityClasses = new HashMap<String, String>();
-	
-	/**
-	 * generate java classes from dynamic config
-	 * @param path to hjson config
-	 */
-	public ElideDynamicEntityCompiler(String path) {
-		try {
-			elideConfigParser.parseConfigPath(path);
+
+    /**
+     * generate java classes from dynamic config.
+     * @param path to hjson config
+     */
+    public ElideDynamicEntityCompiler(String path) {
+        try {
+            elideConfigParser.parseConfigPath(path);
 
             tableConfig = elideConfigParser.getElideTableConfig();
             securityConfig = elideConfigParser.getElideSecurityConfig();
@@ -62,18 +71,19 @@ public class ElideDynamicEntityCompiler {
                     new ElideDynamicInMemoryClassLoader(ClassLoader.getSystemClassLoader(),
                             Sets.newHashSet(classNames)));
 
-		} catch (Exception e) {
-			log.error("Unable to read Dynamic Configuration " + e.getMessage());
-		}
+        } catch (Exception e) {
+            log.error("Unable to read Dynamic Configuration " + e.getMessage());
+        }
 
-	}
-	/**
-	 * compile table classes in-memory
-	 */
-	public void compile() {
+    }
 
-		try {
-			for (Map.Entry<String, String> tablePojo : tableClasses.entrySet()) {
+    /**
+     * compile dynamic classes in-memory.
+     */
+    public void compile() {
+
+        try {
+            for (Map.Entry<String, String> tablePojo : tableClasses.entrySet()) {
                 log.info("key: " + PACKAGE_NAME + tablePojo.getKey() + ", value: " + tablePojo.getValue());
                 compiler.addSource(PACKAGE_NAME + tablePojo.getKey(), tablePojo.getValue());
             }
@@ -82,21 +92,35 @@ public class ElideDynamicEntityCompiler {
                 log.info("key: " + PACKAGE_NAME +  secPojo.getKey() + ", value: " + secPojo.getValue());
                 compiler.addSource(PACKAGE_NAME + secPojo.getKey(), secPojo.getValue());
             }
-			compiledObjects = compiler.compileAll();
-		} catch (Exception e) {
-			log.error("Unable to compile dynamic classes");
-		}
-	}
+            compiledObjects = compiler.compileAll();
+        } catch (Exception e) {
+            log.error("Unable to compile dynamic classes");
+        }
+    }
 
-	public ClassLoader getClassLoader() {
-		return compiler.getClassloader();
-	}
+    /**
+     * getter for classLoader.
+     * @return ClassLoader
+     */
+    public ClassLoader getClassLoader() {
+        return compiler.getClassloader();
+    }
 
-	public Class<?> getCompiled(String name) {
-		return compiledObjects.get(name);
-	}
-	
-	public Set<Class> getBindClasses() {
-		return bindClasses;
-	}
+    /**
+     * getter for compiled dynamic class.
+     * @param name - class name
+     * @return compiled class
+     */
+    public Class<?> getCompiled(String name) {
+        return compiledObjects.get(name);
+    }
+
+    /**
+     * getter for classed to be bound.
+     * @return set of classes to be bound, Dynamic and Declared
+     */
+    @SuppressWarnings("rawtypes")
+    public Set<Class> getBindClasses() {
+        return bindClasses;
+    }
 }
