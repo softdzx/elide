@@ -51,7 +51,7 @@ public class ElideResourceConfig extends ResourceConfig {
 
     private static MetricRegistry metricRegistry = null;
     private static HealthCheckRegistry healthCheckRegistry = null;
-    private static ElideDynamicEntityCompiler dynamicEntityCompiler;
+    private ElideDynamicEntityCompiler dynamicEntityCompiler = null;
 
     /**
      * Constructor.

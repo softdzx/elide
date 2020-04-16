@@ -28,23 +28,21 @@ import java.util.Set;
 @Slf4j
 public class ElideDynamicEntityCompiler {
 
-    public static List<String> classNames = new ArrayList<String>();
-
     @SuppressWarnings("rawtypes")
     public static Set<Class> bindClasses;
-
     public static final String PACKAGE_NAME = "com.yahoo.elide.contrib.dynamicconfig.model.";
-    private Map<String, Class<?>> compiledObjects;
+    public static List<String> classNames = new ArrayList<String>();
 
-    InMemoryJavaCompiler compiler = InMemoryJavaCompiler.newInstance();
+    private static InMemoryJavaCompiler inMemoryJavaCompiler = InMemoryJavaCompiler.newInstance();
+    private static HandlebarsHydrator handlebarHydrator = new HandlebarsHydrator();
+    private static ElideConfigParser elideConfigParser = new ElideConfigParser();
+    private static Map<String, Class<?>> compiledObjects;
 
-    HandlebarsHydrator hydrator = new HandlebarsHydrator();
-    ElideConfigParser elideConfigParser = new ElideConfigParser();
-    ElideTableConfig tableConfig = new ElideTableConfig();
-    ElideSecurityConfig securityConfig = new ElideSecurityConfig();
+    private ElideTableConfig tableConfig = new ElideTableConfig();
+    private ElideSecurityConfig securityConfig = new ElideSecurityConfig();
 
-    Map<String, String> tableClasses = new HashMap<String, String>();
-    Map<String, String> securityClasses = new HashMap<String, String>();
+    private Map<String, String> tableClasses = new HashMap<String, String>();
+    private Map<String, String> securityClasses = new HashMap<String, String>();
 
     /**
      * generate java classes from dynamic config.
@@ -56,8 +54,8 @@ public class ElideDynamicEntityCompiler {
 
             tableConfig = elideConfigParser.getElideTableConfig();
             securityConfig = elideConfigParser.getElideSecurityConfig();
-            tableClasses = hydrator.hydrateTableTemplate(tableConfig);
-            securityClasses = hydrator.hydrateSecurityTemplate(securityConfig);
+            tableClasses = handlebarHydrator.hydrateTableTemplate(tableConfig);
+            securityClasses = handlebarHydrator.hydrateSecurityTemplate(securityConfig);
 
             for (Entry<String, String> entry : tableClasses.entrySet()) {
                 classNames.add(PACKAGE_NAME + entry.getKey());
@@ -67,7 +65,7 @@ public class ElideDynamicEntityCompiler {
                 classNames.add(PACKAGE_NAME + entry.getKey());
             }
 
-            compiler.useParentClassLoader(
+            inMemoryJavaCompiler.useParentClassLoader(
                     new ElideDynamicInMemoryClassLoader(ClassLoader.getSystemClassLoader(),
                             Sets.newHashSet(classNames)));
 
@@ -85,14 +83,14 @@ public class ElideDynamicEntityCompiler {
         try {
             for (Map.Entry<String, String> tablePojo : tableClasses.entrySet()) {
                 log.info("key: " + PACKAGE_NAME + tablePojo.getKey() + ", value: " + tablePojo.getValue());
-                compiler.addSource(PACKAGE_NAME + tablePojo.getKey(), tablePojo.getValue());
+                inMemoryJavaCompiler.addSource(PACKAGE_NAME + tablePojo.getKey(), tablePojo.getValue());
             }
 
             for (Map.Entry<String, String> secPojo : securityClasses.entrySet()) {
                 log.info("key: " + PACKAGE_NAME +  secPojo.getKey() + ", value: " + secPojo.getValue());
-                compiler.addSource(PACKAGE_NAME + secPojo.getKey(), secPojo.getValue());
+                inMemoryJavaCompiler.addSource(PACKAGE_NAME + secPojo.getKey(), secPojo.getValue());
             }
-            compiledObjects = compiler.compileAll();
+            compiledObjects = inMemoryJavaCompiler.compileAll();
         } catch (Exception e) {
             log.error("Unable to compile dynamic classes");
         }
@@ -103,7 +101,7 @@ public class ElideDynamicEntityCompiler {
      * @return ClassLoader
      */
     public ClassLoader getClassLoader() {
-        return compiler.getClassloader();
+        return inMemoryJavaCompiler.getClassloader();
     }
 
     /**
