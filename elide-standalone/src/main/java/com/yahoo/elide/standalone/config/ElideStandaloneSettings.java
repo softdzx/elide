@@ -15,8 +15,12 @@ import com.yahoo.elide.audit.Slf4jLogger;
 import com.yahoo.elide.core.DataStore;
 import com.yahoo.elide.core.EntityDictionary;
 import com.yahoo.elide.core.filter.dialect.RSQLFilterDialect;
+import com.yahoo.elide.datastores.aggregation.AggregationDataStore;
+import com.yahoo.elide.datastores.aggregation.metadata.MetaDataStore;
+import com.yahoo.elide.datastores.aggregation.queryengines.sql.SQLQueryEngine;
 import com.yahoo.elide.datastores.jpa.JpaDataStore;
 import com.yahoo.elide.datastores.jpa.transaction.NonJtaTransaction;
+import com.yahoo.elide.datastores.multiplex.MultiplexManager;
 import com.yahoo.elide.security.checks.Check;
 import com.yahoo.elide.standalone.Util;
 
@@ -64,9 +68,18 @@ public interface ElideStandaloneSettings {
     default ElideSettings getElideSettings(ServiceLocator injector) {
         EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageName(),
                 enableAsync(), enableDynamicModelConfig(), getDynamicConfigPath(), getDatabaseProperties());
-        DataStore dataStore = new JpaDataStore(
+
+        MetaDataStore metaDataStore = new MetaDataStore();
+
+        SQLQueryEngine queryEngine = new SQLQueryEngine(metaDataStore, entityManagerFactory);
+
+        AggregationDataStore aggregationDataStore = new AggregationDataStore(queryEngine);
+
+        DataStore jpaDataStore = new JpaDataStore(
                 () -> { return entityManagerFactory.createEntityManager(); },
                 (em -> { return new NonJtaTransaction(em); }));
+
+        DataStore dataStore = new MultiplexManager(jpaDataStore, queryEngine.getMetaDataStore(), aggregationDataStore);
 
         EntityDictionary dictionary = new EntityDictionary(getCheckMappings(),
                 new Injector() {

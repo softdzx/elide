@@ -90,7 +90,7 @@ public class ElideStandaloneTest {
 
             @Override
             public String getDynamicConfigPath() {
-                return "/Users/amakwana/workspace/elide-dynamic-config/elide/elide-standalone/src/test/resources/models/";
+                return "src/test/resources/models/";
             }
 
         });
