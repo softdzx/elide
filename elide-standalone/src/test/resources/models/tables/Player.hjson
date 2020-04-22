@@ -2,7 +2,6 @@
     tables: [{
         name: Player
         table: player
-        schema: playerdb
         description:
         '''
         A long description

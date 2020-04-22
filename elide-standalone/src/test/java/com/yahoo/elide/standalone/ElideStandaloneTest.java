@@ -110,19 +110,17 @@ public class ElideStandaloneTest {
         .body(
                 datum(
                         resource(
-                                type("player"),
+                                type("playerStats"),
                                 id("ready-player-1"),
                                 attributes(
-                                        attr("name", "player1"),
-                                        attr("countryCode", "USA"),
-                                        attr("playerCountry", "USA"),
-                                        attr("highScore", 100)
-                                        //                        attr("createdOn", "2020-01-01"); still need to be tested with date
+                                        attr("countryId", "1"),
+                                        attr("highScore", 100),
+                                        attr("createdOn", "2020-01-01T00:00Z")
                                         )
                                 )
                         )
                 )
-        .post("/api/v1/player")
+        .post("/api/v1/playerStats")
         .then()
         .statusCode(HttpStatus.SC_CREATED)
         .extract().body().asString();
@@ -217,6 +215,15 @@ public class ElideStandaloneTest {
         given()
         .when()
         .get("/api/v1/timeDimension")
+        .then()
+        .statusCode(200);
+    }
+
+    @Test
+    public void testPlayerEndpoint() throws Exception {
+        given()
+        .when()
+        .get("/api/v1/Player")
         .then()
         .statusCode(200);
     }
