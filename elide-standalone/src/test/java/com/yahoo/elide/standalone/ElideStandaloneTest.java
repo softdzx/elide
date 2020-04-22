@@ -202,4 +202,22 @@ public class ElideStandaloneTest {
         .then()
         .statusCode(200);
     }
+
+    @Test
+    public void testAggregationTableEndpoint() throws Exception {
+        given()
+        .when()
+        .get("/api/v1/table")
+        .then()
+        .statusCode(200);
+    }
+
+    @Test
+    public void testTimeDimensionEndpoint() throws Exception {
+        given()
+        .when()
+        .get("/api/v1/timeDimension")
+        .then()
+        .statusCode(200);
+    }
 }
