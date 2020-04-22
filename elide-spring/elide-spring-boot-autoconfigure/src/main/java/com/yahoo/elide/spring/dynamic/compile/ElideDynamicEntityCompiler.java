@@ -21,6 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Compiles dynamic model pojos generated from hjson files.
+ *
+ */
 @Slf4j
 public class ElideDynamicEntityCompiler {
 
@@ -29,24 +33,25 @@ public class ElideDynamicEntityCompiler {
     public static final String PACKAGE_NAME = "com.yahoo.elide.contrib.dynamicconfig.model.";
     private Map<String, Class<?>> compiledObjects;
 
-    InMemoryJavaCompiler compiler = InMemoryJavaCompiler.newInstance();
+    private InMemoryJavaCompiler compiler = InMemoryJavaCompiler.newInstance();
 
-    HandlebarsHydrator hydrator = new HandlebarsHydrator();
+    private Map<String, String> tableClasses = new HashMap<String, String>();
+    private Map<String, String> securityClasses = new HashMap<String, String>();
 
-    ElideConfigParser elideConfigParser = new ElideConfigParser();
-
-    ElideTableConfig tableConfig = new ElideTableConfig();
-
-    ElideSecurityConfig securityConfig = new ElideSecurityConfig();
-    Map<String, String> tableClasses = new HashMap<String, String>();
-    Map<String, String> securityClasses = new HashMap<String, String>();
-
+    /**
+     * Parse dynamic config path.
+     * @param path : Dynamic config hjsons root location
+     */
     public ElideDynamicEntityCompiler(String path) {
+
+        ElideTableConfig tableConfig = new ElideTableConfig();
+        ElideSecurityConfig securityConfig = new ElideSecurityConfig();
+        ElideConfigParser elideConfigParser = new ElideConfigParser();
+        HandlebarsHydrator hydrator = new HandlebarsHydrator();
 
         try {
 
             elideConfigParser.parseConfigPath(path);
-
             tableConfig = elideConfigParser.getElideTableConfig();
             securityConfig = elideConfigParser.getElideSecurityConfig();
             tableClasses = hydrator.hydrateTableTemplate(tableConfig);
@@ -69,19 +74,27 @@ public class ElideDynamicEntityCompiler {
         }
     }
 
+    /**
+     * Compile table and security model pojos.
+     * @param path: Dynamic config hjsons root location
+     */
     public void compile(String path) throws Exception {
 
         for (Map.Entry<String, String> tablePojo : tableClasses.entrySet()) {
-            log.info("key: " + tablePojo.getKey() + ", value: " + tablePojo.getValue());
+            log.debug("key: " + tablePojo.getKey() + ", value: " + tablePojo.getValue());
             compiler.addSource(PACKAGE_NAME + tablePojo.getKey(), tablePojo.getValue());
         }
 
         for (Map.Entry<String, String> secPojo : securityClasses.entrySet()) {
-            log.info("key: " + secPojo.getKey() + ", value: " + secPojo.getValue());
+            log.debug("key: " + secPojo.getKey() + ", value: " + secPojo.getValue());
             compiler.addSource(PACKAGE_NAME + secPojo.getKey(), secPojo.getValue());
         }
 
-        compiledObjects = compiler.compileAll();
+        try {
+            compiledObjects = compiler.compileAll();
+        } catch (Exception e) {
+            log.error("Unable to compile dynamic classes in memory ");
+        }
 
     }
 

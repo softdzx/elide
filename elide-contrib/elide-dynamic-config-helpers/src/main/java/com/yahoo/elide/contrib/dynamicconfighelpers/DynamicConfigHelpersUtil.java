@@ -76,7 +76,6 @@ public class DynamicConfigHelpersUtil {
             schema.validate(data);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
             log.error(e.getMessage());
             return false;
         }

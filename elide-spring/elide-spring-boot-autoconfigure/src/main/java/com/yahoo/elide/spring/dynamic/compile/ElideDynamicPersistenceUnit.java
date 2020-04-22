@@ -10,6 +10,7 @@ import lombok.Data;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.ClassTransformer;
@@ -17,17 +18,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
+/**
+ * Persistent Unit implementation for Dynamic Configuration.
+ */
 @Data
 public class ElideDynamicPersistenceUnit implements PersistenceUnitInfo {
-
-    public ElideDynamicPersistenceUnit(String persistenceUnitName,
-    List<String> managedClassNames, Properties properties, ClassLoader loader) {
-        this.persistenceUnitName = persistenceUnitName;
-        this.managedClassNames = managedClassNames;
-        this.properties = properties;
-        this.classLoader = loader;
-        this.newTempClassLoader = loader;
-    }
 
     private String persistenceUnitName;
     private String persistenceProviderClassName;
@@ -45,12 +40,27 @@ public class ElideDynamicPersistenceUnit implements PersistenceUnitInfo {
     private ClassLoader classLoader;
     private ClassLoader newTempClassLoader;
 
+    public ElideDynamicPersistenceUnit(
+            String persistenceUnitName,
+            List<String> managedClassNames,
+            Properties properties,
+            ClassLoader loader) {
+        this.persistenceUnitName = persistenceUnitName;
+        this.managedClassNames = managedClassNames;
+        this.properties = properties;
+        this.classLoader = loader;
+        this.newTempClassLoader = loader;
+    }
+
     @Override
     public boolean excludeUnlistedClasses() {
         return false;
     }
 
-    public void addTransformer(ClassTransformer classTransformer) { }
+    @Override
+    public void addTransformer(ClassTransformer classTransformer) {
+        //Not implemented
+    }
 
     public ClassLoader getClassLoader() {
         return classLoader;
