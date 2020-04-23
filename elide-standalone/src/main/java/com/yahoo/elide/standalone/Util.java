@@ -33,7 +33,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
  */
 public class Util {
 
-    private static ElideDynamicEntityCompiler dynamicEntityCompiler;
+    public static ElideDynamicEntityCompiler dynamicEntityCompiler;
 
     public static EntityManagerFactory getEntityManagerFactory(String modelPackageName, boolean includeAsyncModel,
             boolean includeDynamicModel, String dynamicConfigPath, Properties options) {
@@ -156,9 +156,9 @@ public class Util {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Set<Class> populateBindClasses(ElideDynamicEntityCompiler compiler,
+    public static Set<Class<?>> populateBindClasses(ElideDynamicEntityCompiler compiler,
             Class annotationClass) throws ClassNotFoundException {
-        Set<Class> bindClasses = new HashSet<>();
+        Set<Class<?>> bindClasses = new HashSet<>();
         List<String> dynamicClasses = ElideDynamicEntityCompiler.classNames;
         for (String dynamicClass : dynamicClasses) {
             Class<?> bindClass = compiler.getClassLoader().loadClass(dynamicClass).getClass();

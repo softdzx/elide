@@ -9,6 +9,7 @@ import com.yahoo.elide.ElideSettings;
 import com.yahoo.elide.ElideSettingsBuilder;
 
 import com.yahoo.elide.Injector;
+import com.yahoo.elide.annotation.SecurityCheck;
 import com.yahoo.elide.async.service.AsyncQueryDAO;
 import com.yahoo.elide.audit.AuditLogger;
 import com.yahoo.elide.audit.Slf4jLogger;
@@ -18,6 +19,8 @@ import com.yahoo.elide.core.filter.dialect.RSQLFilterDialect;
 import com.yahoo.elide.datastores.aggregation.AggregationDataStore;
 import com.yahoo.elide.datastores.aggregation.metadata.MetaDataStore;
 import com.yahoo.elide.datastores.aggregation.queryengines.sql.SQLQueryEngine;
+import com.yahoo.elide.datastores.aggregation.queryengines.sql.annotation.FromSubquery;
+import com.yahoo.elide.datastores.aggregation.queryengines.sql.annotation.FromTable;
 import com.yahoo.elide.datastores.jpa.JpaDataStore;
 import com.yahoo.elide.datastores.jpa.transaction.NonJtaTransaction;
 import com.yahoo.elide.datastores.multiplex.MultiplexManager;
@@ -35,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
 import javax.persistence.EntityManagerFactory;
@@ -64,23 +68,9 @@ public interface ElideStandaloneSettings {
      *
      * @param injector Service locator for web service for dependency injection.
      * @return Configured ElideSettings object.
+     * @throws ClassNotFoundException
      */
-    default ElideSettings getElideSettings(ServiceLocator injector) {
-        EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageName(),
-                enableAsync(), enableDynamicModelConfig(), getDynamicConfigPath(), getDatabaseProperties());
-
-        MetaDataStore metaDataStore = new MetaDataStore();
-
-        SQLQueryEngine queryEngine = new SQLQueryEngine(metaDataStore, entityManagerFactory);
-
-        AggregationDataStore aggregationDataStore = new AggregationDataStore(queryEngine);
-
-        DataStore jpaDataStore = new JpaDataStore(
-                () -> { return entityManagerFactory.createEntityManager(); },
-                (em -> { return new NonJtaTransaction(em); }));
-
-        DataStore dataStore = new MultiplexManager(jpaDataStore, queryEngine.getMetaDataStore(), aggregationDataStore);
-
+    default ElideSettings getElideSettings(ServiceLocator injector) throws ClassNotFoundException {
         EntityDictionary dictionary = new EntityDictionary(getCheckMappings(),
                 new Injector() {
                     @Override
@@ -95,6 +85,40 @@ public interface ElideStandaloneSettings {
                 });
 
         dictionary.scanForSecurityChecks();
+
+        EntityManagerFactory entityManagerFactory = Util.getEntityManagerFactory(getModelPackageName(),
+                enableAsync(), enableDynamicModelConfig(), getDynamicConfigPath(), getDatabaseProperties());
+
+        MetaDataStore metaDataStore = new MetaDataStore();
+
+        if (enableDynamicModelConfig()) {
+            // Add dynamic security checks
+            Set<Class<?>> annotatedClasses = Util.populateBindClasses(Util.dynamicEntityCompiler, SecurityCheck.class);
+            dictionary.addSecurityChecks(annotatedClasses);
+
+            // Populate metadatastore enity dictionary
+            Set<Class<?>> annotatedFromClasses = Util.populateBindClasses(Util.dynamicEntityCompiler, FromTable.class);
+            annotatedFromClasses.addAll(Util.populateBindClasses(Util.dynamicEntityCompiler, FromSubquery.class));
+            metaDataStore.populateEntityDictionary(annotatedFromClasses);
+        }
+
+        SQLQueryEngine queryEngine = new SQLQueryEngine(metaDataStore, entityManagerFactory);
+
+        AggregationDataStore aggregationDataStore = null;
+
+        if (enableDynamicModelConfig()) {
+            Set<Class<?>> annotatedClasses = Util.populateBindClasses(Util.dynamicEntityCompiler, FromTable.class);
+            annotatedClasses.addAll(Util.populateBindClasses(Util.dynamicEntityCompiler, FromSubquery.class));
+            aggregationDataStore = new AggregationDataStore(queryEngine, annotatedClasses);
+        } else {
+            aggregationDataStore = new AggregationDataStore(queryEngine);
+        }
+
+        DataStore jpaDataStore = new JpaDataStore(
+                () -> { return entityManagerFactory.createEntityManager(); },
+                (em -> { return new NonJtaTransaction(em); }));
+
+        DataStore dataStore = new MultiplexManager(jpaDataStore, queryEngine.getMetaDataStore(), aggregationDataStore);
 
         ElideSettingsBuilder builder = new ElideSettingsBuilder(dataStore)
                 .withEntityDictionary(dictionary)

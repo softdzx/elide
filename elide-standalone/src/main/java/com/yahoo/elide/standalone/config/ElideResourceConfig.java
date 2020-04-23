@@ -88,7 +88,13 @@ public class ElideResourceConfig extends ResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                ElideSettings elideSettings = settings.getElideSettings(injector);
+                ElideSettings elideSettings;
+                try {
+                    elideSettings = settings.getElideSettings(injector);
+                } catch (ClassNotFoundException e) {
+                    //Cannot throw ClassNotFoundException, still need to fail startup.
+                    throw new RuntimeException(e);
+                }
 
                 Elide elide = new Elide(elideSettings);
 

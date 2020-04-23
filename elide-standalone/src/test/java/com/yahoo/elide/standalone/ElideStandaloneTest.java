@@ -13,6 +13,8 @@ import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.id;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.resource;
 import static com.yahoo.elide.contrib.testhelpers.jsonapi.JsonApiDSL.type;
 import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.hasKey;
 
 import com.yahoo.elide.contrib.swagger.SwaggerBuilder;
@@ -103,7 +105,7 @@ public class ElideStandaloneTest {
     }
 
     @Test
-    public void testJsonAPIPlayer() {
+    public void testJsonAPIPlayerStats() {
         given()
         .contentType(JSONAPI_CONTENT_TYPE)
         .accept(JSONAPI_CONTENT_TYPE)
@@ -114,7 +116,7 @@ public class ElideStandaloneTest {
                                 id("ready-player-1"),
                                 attributes(
                                         attr("countryId", "1"),
-                                        attr("highScore", 100),
+                                        attr("score", 100),
                                         attr("createdOn", "2020-01-01T00:00Z")
                                         )
                                 )
@@ -226,5 +228,38 @@ public class ElideStandaloneTest {
         .get("/api/v1/Player")
         .then()
         .statusCode(200);
+    }
+
+    @Test
+    public void testJsonApiGetPlayer() {
+        //Prep with data load
+        given()
+        .contentType(JSONAPI_CONTENT_TYPE)
+        .accept(JSONAPI_CONTENT_TYPE)
+        .body(
+                datum(
+                        resource(
+                                type("playerStats"),
+                                id("ready-player-2"),
+                                attributes(
+                                        attr("countryId", "1"),
+                                        attr("score", 100),
+                                        attr("createdOn", "2020-01-01T00:00Z")
+                                        )
+                                )
+                        )
+                )
+        .post("/api/v1/playerStats")
+        .then()
+        .statusCode(HttpStatus.SC_CREATED);
+
+        // Retrieve Data
+        when()
+        .get("/api/v1/Player")
+        .then()
+        .body("data.id", hasItems("0"))
+        .body("data.attributes.name", hasItems("ready-player-2"))
+        .body("data.attributes.highScore", hasItems(100))
+        .statusCode(HttpStatus.SC_OK);
     }
 }

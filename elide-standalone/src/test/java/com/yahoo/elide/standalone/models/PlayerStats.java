@@ -47,6 +47,6 @@ public class PlayerStats {
     private Date createdOn;
 
     @ReadPermission(expression = "Prefab.Role.All")
-    private Long highScore;
+    private Long score;
 
 }
