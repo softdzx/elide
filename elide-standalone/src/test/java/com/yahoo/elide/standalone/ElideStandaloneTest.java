@@ -165,8 +165,8 @@ public class ElideStandaloneTest {
                             attr("content", "This is my first post. woot."),
                             attr("date", "2019-01-01T00:00Z"),
                             attr("abusiveContent", true)
-                            )
                         )
+                    )
                 )
             )
             .post("/api/v1/post")
