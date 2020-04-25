@@ -6,6 +6,7 @@
 package com.yahoo.elide.core;
 
 import static com.yahoo.elide.Elide.JSONAPI_CONTENT_TYPE;
+import static com.yahoo.elide.Elide.JSONAPI_CONTENT_TYPE_WITH_JSON_PATCH_EXTENSION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -322,7 +323,6 @@ public class LifeCycleTest {
         verify(tx).close();
     }
 
-
     @Test
     public void testElidePatchFailure() throws Exception {
         DataStore store = mock(DataStore.class);
@@ -400,6 +400,41 @@ public class LifeCycleTest {
     }
 
     @Test
+    public void testElidePatchExtensionDelete() throws Exception {
+        DataStore store = mock(DataStore.class);
+        DataStoreTransaction tx = mock(DataStoreTransaction.class);
+        Book book = mock(Book.class);
+
+        Elide elide = getElide(store, dictionary, MOCK_AUDIT_LOGGER);
+
+        when(book.getId()).thenReturn(1L);
+        when(store.beginTransaction()).thenReturn(tx);
+        when(tx.loadObject(eq(Book.class), any(), any(), isA(RequestScope.class))).thenReturn(book);
+
+        String bookBody = "[{\"op\": \"remove\",\"path\": \"/book\",\"value\":{"
+                + "\"type\":\"book\",\"id\": \"1\"}}]";
+
+        String contentType = JSONAPI_CONTENT_TYPE_WITH_JSON_PATCH_EXTENSION;
+        ElideResponse response = elide.patch(contentType, contentType, "/", bookBody, null);
+        assertEquals(HttpStatus.SC_OK, response.getResponseCode());
+
+        /*
+         * This gets called for :
+         *  - delete pre-security for the book
+         *  - delete pre-commit for the book
+         *  - delete post-commit for the book
+         */
+        verify(callback, times(3)).execute(eq(book), isA(RequestScope.class), any());
+        verify(tx).accessUser(any());
+        verify(tx).preCommit();
+
+        verify(tx).delete(eq(book), isA(RequestScope.class));
+        verify(tx).flush(isA(RequestScope.class));
+        verify(tx).commit(isA(RequestScope.class));
+        verify(tx).close();
+    }
+
+    @Test
     public void testCreate() {
         Book book = mock(Book.class);
         DataStoreTransaction tx = mock(DataStoreTransaction.class);
@@ -438,6 +473,68 @@ public class LifeCycleTest {
         verify(book, times(2)).onCreatePreCommitStar(eq(scope), any());
         verify(book, times(1)).onReadPostCommit(scope);
         verify(book, times(3)).checkPermission(scope);
+    }
+
+    @Test
+    public void testElidePatchExtensionCreate() throws Exception {
+        DataStore store = mock(DataStore.class);
+        DataStoreTransaction tx = mock(DataStoreTransaction.class);
+        Book book = mock(Book.class);
+
+        Elide elide = getElide(store, dictionary, MOCK_AUDIT_LOGGER);
+
+        String bookBody = "[{\"op\": \"add\",\"path\": \"/book\",\"value\":{"
+                + "\"type\":\"book\",\"id\": \"A\",\"attributes\": {\"title\":\"Grapes of Wrath\"}}}]";
+
+        when(store.beginTransaction()).thenReturn(tx);
+        when(tx.createNewObject(Book.class)).thenReturn(book);
+
+        String contentType = JSONAPI_CONTENT_TYPE_WITH_JSON_PATCH_EXTENSION;
+        ElideResponse response = elide.patch(contentType, contentType, "/", bookBody, null);
+        assertEquals(HttpStatus.SC_OK, response.getResponseCode());
+
+        /*
+         * This gets called for :
+         *  - read pre-security for the book
+         *  - create pre-security for the book
+         *  - read pre-commit for the book
+         *  - create pre-commit for the book
+         *  - read post-commit for the book
+         *  - create post-commit for the book
+         */
+        verify(callback, times(6)).execute(eq(book), isA(RequestScope.class), any());
+        verify(tx).accessUser(any());
+        verify(tx).preCommit();
+        verify(tx, times(1)).createObject(eq(book), isA(RequestScope.class));
+        verify(tx).flush(isA(RequestScope.class));
+        verify(tx).commit(isA(RequestScope.class));
+        verify(tx).close();
+    }
+
+    @Test
+    public void failElidePatchExtensionCreate() throws Exception {
+        DataStore store = mock(DataStore.class);
+        DataStoreTransaction tx = mock(DataStoreTransaction.class);
+        Book book = mock(Book.class);
+
+        Elide elide = getElide(store, dictionary, MOCK_AUDIT_LOGGER);
+
+        String bookBody = "[{\"op\": \"add\",\"path\": \"/book\",\"value\":{"
+                + "\"type\":\"book\",\"attributes\": {\"title\":\"Grapes of Wrath\"}}}]";
+
+        when(store.beginTransaction()).thenReturn(tx);
+        when(tx.createNewObject(Book.class)).thenReturn(book);
+
+        String contentType = JSONAPI_CONTENT_TYPE_WITH_JSON_PATCH_EXTENSION;
+        ElideResponse response = elide.patch(contentType, contentType, "/", bookBody, null);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getResponseCode());
+
+        verify(callback, never()).execute(eq(book), isA(RequestScope.class), any());
+        verify(tx).accessUser(any());
+        verify(tx, never()).preCommit();
+        verify(tx, never()).flush(isA(RequestScope.class));
+        verify(tx, never()).commit(isA(RequestScope.class));
+        verify(tx).close();
     }
 
     @Test
@@ -492,6 +589,49 @@ public class LifeCycleTest {
 
         // verify no empty callbacks
         verifyNoEmptyCallbacks();
+    }
+
+    @Test
+    public void testElidePatchExtensionUpdate() throws Exception {
+        DataStore store = mock(DataStore.class);
+        DataStoreTransaction tx = mock(DataStoreTransaction.class);
+        Book book = mock(Book.class);
+
+        Elide elide = getElide(store, dictionary, MOCK_AUDIT_LOGGER);
+
+        when(book.getId()).thenReturn(1L);
+        when(store.beginTransaction()).thenReturn(tx);
+        when(tx.loadObject(eq(Book.class), any(), any(), isA(RequestScope.class))).thenReturn(book);
+
+        String bookBody = "[{\"op\": \"replace\",\"path\": \"/book/1\",\"value\":{"
+                + "\"type\":\"book\",\"id\":1,\"attributes\": {\"title\":\"Grapes of Wrath\"}}}]";
+
+        String contentType = JSONAPI_CONTENT_TYPE_WITH_JSON_PATCH_EXTENSION;
+        ElideResponse response = elide.patch(contentType, contentType, "/", bookBody, null);
+        assertEquals(HttpStatus.SC_OK, response.getResponseCode());
+        assertEquals("[{\"data\":null}]", response.getBody());
+
+        /*
+         * This gets called for :
+         *  - read pre-security for the book
+         *  - update pre-security for the book.title
+         *  - read pre-commit for the book
+         *  - update pre-commit for the book.title
+         *  - read post-commit for the book
+         *  - update post-commit for the book.title
+         */
+        verify(callback, times(6)).execute(eq(book), isA(RequestScope.class), any());
+        verify(onUpdateImmediateCallback, times(1)).execute(eq(book), isA(RequestScope.class), any());
+        verify(onUpdateDeferredCallback, times(1)).execute(eq(book), isA(RequestScope.class), any());
+        verify(onUpdateImmediateCallback, never()).execute(eq(book), isA(RequestScope.class), eq(Optional.empty()));
+        verify(onUpdateDeferredCallback, never()).execute(eq(book), isA(RequestScope.class), eq(Optional.empty()));
+        verify(tx).accessUser(any());
+        verify(tx).preCommit();
+
+        verify(tx).save(eq(book), isA(RequestScope.class));
+        verify(tx).flush(isA(RequestScope.class));
+        verify(tx).commit(isA(RequestScope.class));
+        verify(tx).close();
     }
 
     @Test
