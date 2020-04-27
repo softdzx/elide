@@ -10,6 +10,7 @@ import com.yahoo.elide.async.models.AsyncQuery;
 import com.yahoo.elide.graphql.QueryRunner;
 import com.yahoo.elide.security.User;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -24,6 +25,7 @@ import javax.inject.Inject;
  * It will also schedule task to update orphan query statuses after
  * host/app crash or restart.
  */
+@Getter
 @Slf4j
 public class AsyncExecutorService {
 
