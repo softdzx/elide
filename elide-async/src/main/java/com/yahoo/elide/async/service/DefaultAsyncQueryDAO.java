@@ -98,8 +98,6 @@ public class DefaultAsyncQueryDAO implements AsyncQueryDAO {
     private Collection<AsyncQuery> updateAsyncQueryCollection(String filterExpression,
             UpdateQuery updateFunction) {
         log.debug("updateAsyncQueryCollection");
-        EntityDictionary dictionary = elide.getElideSettings().getDictionary();
-        RSQLFilterDialect filterParser = new RSQLFilterDialect(dictionary);
 
         Collection<AsyncQuery> asyncQueryList = null;
 
@@ -133,8 +131,6 @@ public class DefaultAsyncQueryDAO implements AsyncQueryDAO {
     @SuppressWarnings("unchecked")
     public Collection<AsyncQuery> deleteAsyncQueryAndResultCollection(String filterExpression) {
         log.debug("deleteAsyncQueryAndResultCollection");
-        EntityDictionary dictionary = elide.getElideSettings().getDictionary();
-        RSQLFilterDialect filterParser = new RSQLFilterDialect(dictionary);
 
         Collection<AsyncQuery> asyncQueryList = null;
 
